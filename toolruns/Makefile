@@ -38,12 +38,17 @@
 #===================================================================
 
 # Sources.
-GF_SRC=../src/rtl/blake2s_G.v
-M_SELECT_SRC=../src/rtl/blake2s_m_select.v
-TOP_SRC=../src/rtl/*.v
+GF_SRC = ../src/rtl/blake2s_G.v
+M_SELECT_SRC = ../src/rtl/blake2s_m_select.v
+ROUND_SRC =  ../src/rtl/blake2s_round.v
+CORE_SRC = ../src/rtl/blake2s_core.v $(M_SELECT_SRC) $(ROUND_SRC) $(GF_SRC)
+TOP_SRC= ../src/rtl/blake2s.v $(CORE_SRC)
 
-TB_GF_SRC =../src/tb/tb_blake2s_G.v
-TB_M_SELECT_SRC =../src/tb/tb_blake2s_m_select.v
+TB_GF_SRC = ../src/tb/tb_blake2s_G.v
+TB_M_SELECT_SRC = ../src/tb/tb_blake2s_m_select.v
+TB_ROUND_SRC = ../src/tb/tb_blake2s_round.v
+TB_CORE_SRC = ../src/tb/tb_blake2s_core.v
+TB_TOP_SRC = ../src/tb/tb_blake2s_core.v
 
 
 # Tools and flags.
@@ -54,7 +59,7 @@ LINT= verilator
 LINT_FLAGS = +1364-2001ext+ --lint-only  -Wall -Wno-fatal -Wno-DECLFILENAME
 
 # Targets.
-all: gf.sim m.sim top.sim
+all: gf.sim m.sim round.sim core.sim top.sim
 
 
 gf.sim:  $(TB_GF_SRC) $(GF_SRC)
@@ -62,7 +67,15 @@ gf.sim:  $(TB_GF_SRC) $(GF_SRC)
 
 
 m.sim:  $(TB_M_SELECT_SRC) $(M_SELECT_SRC)
-	$(CC) $(CC_FLAGS) -o m_select.sim $(TB_M_SELECT_SRC) $(M_SELECT_SRC)
+	$(CC) $(CC_FLAGS) -o m.sim $(TB_M_SELECT_SRC) $(M_SELECT_SRC)
+
+
+round.sim:  $(TB_ROUND_SRC) $(ROUND_SRC)
+	$(CC) $(CC_FLAGS) -o round.sim $(TB_ROUND_SRC) $(ROUND_SRC)
+
+
+core.sim:  $(TB_CORE_SRC) $(CORE_SRC)
+	$(CC) $(CC_FLAGS) -o core.sim $(TB_CORE_SRC) $(CORE_SRC)
 
 
 top.sim:  $(TOP_SRC)
@@ -86,6 +99,7 @@ help:
 	@echo "lint:         Run linter on  all rtl source files."
 	@echo "top.sim:      Build top level simulation target."
 	@echo "core.sim:     Build core level simulation target."
+	@echo "roundsim:     Build round function simulation target."
 	@echo "gf.sim:       Build G function simulation target."
 	@echo "m.sim:        Build m select module simulation target."
 	@echo "clean:        Delete all built files."
