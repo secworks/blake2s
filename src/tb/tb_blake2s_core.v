@@ -66,7 +66,6 @@ module tb_blake2s_core();
   reg [31 : 0]   tb_final_length;
   wire           tb_ready;
   wire [255 : 0] tb_digest;
-  wire           tb_digest_valid;
 
 
   //----------------------------------------------------------------
@@ -85,8 +84,7 @@ module tb_blake2s_core();
 
                     .ready(tb_ready),
 
-                    .digest(tb_digest),
-                    .digest_valid(tb_digest_valid)
+                    .digest(tb_digest)
                    );
 
 
@@ -138,6 +136,49 @@ module tb_blake2s_core();
 
 
   //----------------------------------------------------------------
+  // inc_tc_ctr
+  //----------------------------------------------------------------
+  task inc_tc_ctr;
+    tc_ctr = tc_ctr + 1;
+  endtask // inc_tc_ctr
+
+
+  //----------------------------------------------------------------
+  // inc_error_ctr
+  //----------------------------------------------------------------
+  task inc_error_ctr;
+    error_ctr = error_ctr + 1;
+  endtask // inc_error_ctr
+
+
+  //----------------------------------------------------------------
+  // pause_finish()
+  //
+  // Pause for a given number of cycles and then finish sim.
+  //----------------------------------------------------------------
+  task pause_finish(input [31 : 0] num_cycles);
+    begin
+      $display("Pausing for %04d cycles and then finishing hard.", num_cycles);
+      #(num_cycles * CLK_PERIOD);
+      $finish;
+    end
+  endtask // pause_finish
+
+
+  //----------------------------------------------------------------
+  // wait_ready()
+  //
+  // Wait for the ready flag to be set in dut.
+  //----------------------------------------------------------------
+  task wait_ready;
+    begin : wready
+      while (!tb_ready)
+        #(CLK_PERIOD);
+    end
+  endtask // wait_ready
+
+
+  //----------------------------------------------------------------
   // display_test_result()
   //
   // Display the accumulated test results.
@@ -158,11 +199,11 @@ module tb_blake2s_core();
 
 
   //----------------------------------------------------------------
-  // init_dut()
+  // init_sim()
   //
   // Set the input to the DUT to defined values.
   //----------------------------------------------------------------
-  task init_dut;
+  task init_sim;
     begin
       cycle_ctr       = 0;
       error_ctr       = 0;
@@ -175,7 +216,24 @@ module tb_blake2s_core();
       tb_block        = 512'h0;
       tb_final_length = 32'h0;
     end
-  endtask // init_dut
+  endtask // init_sim
+
+
+  //----------------------------------------------------------------
+  // reset_dut()
+  //
+  // Toggle reset to put the DUT into a well known state.
+  //----------------------------------------------------------------
+  task reset_dut;
+    begin
+      $display("TB: Resetting dut.");
+      tb_reset_n = 0;
+      #(2 * CLK_PERIOD);
+      tb_reset_n = 1;
+      #(2 * CLK_PERIOD);
+      $display("TB: Reset done.");
+    end
+  endtask // reset_dut
 
 
   //----------------------------------------------------------------
@@ -189,7 +247,8 @@ module tb_blake2s_core();
       $display("-------------------------------------------------------");
       $display("");
 
-      init_dut();
+      init_sim();
+      reset_dut();
 
       display_test_result();
 

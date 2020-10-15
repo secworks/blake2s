@@ -50,8 +50,7 @@ module blake2s_core(
 
                     output wire           ready,
 
-                    output wire [255 : 0] digest,
-                    output wire           digest_valid
+                    output wire [255 : 0] digest
                   );
 
 
@@ -161,10 +160,6 @@ module blake2s_core(
   reg [31 : 0] f1_reg;
   reg [31 : 0] f1_new;
   reg          f1_we;
-
-  reg  digest_valid_reg;
-  reg  digest_valid_new;
-  reg  digest_valid_we;
 
   reg  ready_reg;
   reg  ready_new;
@@ -320,7 +315,6 @@ module blake2s_core(
                    h_reg[6][7:0], h_reg[6][15:8], h_reg[6][23:16], h_reg[6][31:24],
                    h_reg[7][7:0], h_reg[7][15:8], h_reg[7][23:16], h_reg[7][31:24]};
 
-  assign digest_valid = digest_valid_reg;
   assign ready = ready_reg;
 
 
@@ -347,7 +341,6 @@ module blake2s_core(
           t1_reg           <= 32'h0;
           f1_reg           <= 32'h0;
           ready_reg        <= 1'h1;
-          digest_valid_reg <= 1'h0;
           G_mode_reg       <= G_ROW;
           dr_ctr_reg       <= 4'h0;
           blake2s_ctrl_reg <= CTRL_IDLE;
@@ -377,9 +370,6 @@ module blake2s_core(
 
           if (ready_we)
             ready_reg <= ready_new;
-
-          if (digest_valid_we)
-            digest_valid_reg <= digest_valid_new;
 
           if (G_mode_we)
             G_mode_reg <= G_mode_new;
@@ -677,8 +667,6 @@ module blake2s_core(
       update_chain_value = 1'h0;
       ready_new          = 1'h0;
       ready_we           = 1'h0;
-      digest_valid_new   = 1'h0;
-      digest_valid_we    = 1'h0;
       blake2s_ctrl_new   = CTRL_IDLE;
       blake2s_ctrl_we    = 1'h0;
 
@@ -728,8 +716,6 @@ module blake2s_core(
             update_chain_value = 1'h1;
             ready_new          = 1'h1;
             ready_we           = 1'h1;
-            digest_valid_new   = 1'h1;
-            digest_valid_we    = 1'h1;
             blake2s_ctrl_new   = CTRL_DONE;
             blake2s_ctrl_we    = 1'h1;
           end
@@ -741,8 +727,6 @@ module blake2s_core(
               begin
                 ready_new        = 1'h0;
                 ready_we         = 1'h1;
-                digest_valid_new = 1'h0;
-                digest_valid_we  = 1'h1;
                 load_m           = 1'h1;
                 blake2s_ctrl_new = CTRL_INIT;
                 blake2s_ctrl_we  = 1'h1;
@@ -751,8 +735,6 @@ module blake2s_core(
               begin
                 ready_new        = 1'h0;
                 ready_we         = 1'h1;
-                digest_valid_new = 1'h0;
-                digest_valid_we  = 1'h1;
                 load_m           = 1'h1;
                 blake2s_ctrl_new = CTRL_INIT;
                 blake2s_ctrl_we  = 1'h1;

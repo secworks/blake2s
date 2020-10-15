@@ -91,7 +91,6 @@ module blake2s(
   reg         final_length_we;
 
   reg ready_reg;
-  reg digest_valid_reg;
 
   reg [31 : 0] block_mem [0 : 15];
   reg          block_mem_we;
@@ -101,7 +100,6 @@ module blake2s(
   // Wires.
   //----------------------------------------------------------------
   wire           core_ready;
-  wire           core_digest_valid;
   wire [31 : 0]  core_final_length;
   wire [511 : 0] core_block;
   wire [255 : 0] core_digest;
@@ -138,8 +136,7 @@ module blake2s(
 
                     .ready(core_ready),
 
-                    .digest(core_digest),
-                    .digest_valid(core_digest_valid)
+                    .digest(core_digest)
                    );
 
 
@@ -159,13 +156,11 @@ module blake2s(
           next_reg         <= 1'h0;
           final_reg        <= 1'h0;
           ready_reg        <= 1'h0;
-          digest_valid_reg <= 1'h0;
           final_length_reg <= 7'h0;
         end
       else
         begin
           ready_reg        <= core_ready;
-          digest_valid_reg <= core_digest_valid;
           init_reg         <= init_new;
           next_reg         <= next_new;
           final_reg        <= final_new;
@@ -221,7 +216,7 @@ module blake2s(
                   tmp_read_data = CORE_VERSION;
 
               if (address == ADDR_STATUS)
-                tmp_read_data = {30'h0, digest_valid_reg, ready_reg};
+                tmp_read_data = {31'h0, ready_reg};
 
                 if ((address >= ADDR_DIGEST0) && (address <= ADDR_DIGEST7))
                   tmp_read_data = core_digest[(3 - (address - ADDR_DIGEST0)) * 32 +: 32];
