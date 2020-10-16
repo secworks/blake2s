@@ -37,9 +37,26 @@
 #include <stdio.h>
 #include <stdint.h>
 
-int main(void) {
 
-  return 1;
+//------------------------------------------------------------------
+//------------------------------------------------------------------
+int run_tests() {
+  int test_results = 0;
+
+  printf("Number of failing test cases: %d\n", test_results);
+
+  return test_results;
+}
+
+
+//------------------------------------------------------------------
+// int main()
+//------------------------------------------------------------------
+int main(void) {
+  printf("\n");
+  printf("Test of Blake2s reference model started\n");
+  printf("---------------------------------------\n");
+  return run_tests();
 }
 
 //======================================================================

@@ -33,12 +33,12 @@
 #
 #======================================================================
 
-CC=clang
-CFLAGS=-O2  -Wall -Wextra -std=c99 -pedantic -Wno-long-long
-BLAKEBINS=blake2s
+CC = clang
+CFLAGS = -O2  -Wall -Wextra -std=c99 -pedantic -Wno-long-long
+BLAKEBINS = blake2s test_blake2s
 
 
-all:		$(BLAKEBINS) check test_blake2s test_blake2s
+all:		$(BLAKEBINS) check
 
 blake2s:	blake2s-ref.c
 		$(CC) blake2s-ref.c -o $@ $(CFLAGS) -DBLAKE2S_SELFTEST
@@ -48,10 +48,10 @@ test_blake2s:	test_blake2s.c
 
 check:          $(BLAKEBINS)
 	        ./blake2s
+		./test_blake2s
 
 clean:
 		rm -rf $(BLAKEBINS)
-		rm -f test_blake2s
 
 #=======================================================================
 # EOF Makefile
