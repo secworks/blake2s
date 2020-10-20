@@ -120,11 +120,11 @@ int test_rfc_7693() {
 
 //------------------------------------------------------------------
 // test1
-// Test with one complete block.
+// Test with a message with a single, 64 byte block.
 //------------------------------------------------------------------
 int test1() {
   int errors = 0;
-  printf("test1 started\n");
+  printf("test1 started. A message with a single, 64 byte block.\n");
 
   blake2s_state my_state;
   blake2s_init(&my_state, 32);
@@ -157,12 +157,51 @@ int test1() {
 
 
 //------------------------------------------------------------------
+// test2
+// Test with a zero byte message.
+//------------------------------------------------------------------
+int test2() {
+  int errors = 0;
+  printf("test2 started. A zero length message.\n");
+
+  blake2s_state my_state;
+  blake2s_init(&my_state, 32);
+
+
+  uint32_t my_message[16] = {0x00000000, 0x00000000, 0x00000000, 0x00000000,
+                             0x00000000, 0x00000000, 0x00000000, 0x00000000,
+                             0x00000000, 0x00000000, 0x00000000, 0x00000000,
+                             0x00000000, 0x00000000, 0x00000000, 0x00000000};
+
+  blake2s_update(&my_state, &my_message[0], 0);
+
+
+  uint8_t my_expected[32] = {0x69, 0x21, 0x7a, 0x30, 0x79, 0x90, 0x80, 0x94,
+                             0xe1, 0x11, 0x21, 0xd0, 0x42, 0x35, 0x4a, 0x7c,
+                             0x1f, 0x55, 0xb6, 0x48, 0x2c, 0xa1, 0xa5, 0x1e,
+                             0x1b, 0x25, 0x0d, 0xfd, 0x1e, 0xd0, 0xee, 0xf9};
+
+  uint8_t my_tag[32];
+  blake2s_final(&my_state, &my_tag[0], 32);
+
+  printf("Generated tag:\n");
+  print_hexdata(&my_tag[0], 32);
+  errors += check_tag(&my_tag[0], &my_expected[0], 32);
+
+  printf("test2 completed with %d errors\n\n", errors);
+  return errors;
+
+}
+
+
+//------------------------------------------------------------------
 //------------------------------------------------------------------
 int run_tests() {
   int test_results = 0;
 
   test_results += test_rfc_7693();
   test_results += test1();
+  test_results += test2();
 
   printf("Number of failing test cases: %d\n", test_results);
 
