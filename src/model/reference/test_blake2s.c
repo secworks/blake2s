@@ -60,9 +60,9 @@ void print_hexdata(uint8_t *data, uint32_t len) {
 // Check the generated tag against an expected tag.
 // The tag is expected to be 16 bytes.
 //------------------------------------------------------------------
-int check_tag(uint8_t *tag, uint8_t *expected) {
+int check_tag(uint8_t *tag, uint8_t *expected, uint8_t len) {
   uint8_t error = 0;
-  for (uint8_t i = 0 ; i < 16 ; i++) {
+  for (uint8_t i = 0 ; i < len ; i++) {
     if (tag[i] != expected[i])
       error = 1;
   }
@@ -73,9 +73,9 @@ int check_tag(uint8_t *tag, uint8_t *expected) {
   else {
     printf("Correct tag NOT generated.\n");
     printf("Expected:\n");
-    print_hexdata(&expected[0], 16);
+    print_hexdata(&expected[0], len);
     printf("Got:\n");
-    print_hexdata(&tag[0], 16);
+    print_hexdata(&tag[0], len);
   }
   return error;
 }
@@ -88,9 +88,6 @@ int check_tag(uint8_t *tag, uint8_t *expected) {
 int test_rfc_7693() {
   int errors = 0;
   printf("test_rfc_7693 started\n");
-
-//  uint8_t my_key[32] = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-//                        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
   blake2s_state my_state;
   blake2s_init(&my_state, 32);
@@ -113,10 +110,49 @@ int test_rfc_7693() {
 
   printf("Generated tag:\n");
   print_hexdata(&my_tag[0], 32);
-  errors += check_tag(&my_tag[0], &my_expected[0]);
+  errors += check_tag(&my_tag[0], &my_expected[0], 32);
 
-  printf("test_rfc_7693 completed with %d errors\n", errors);
+  printf("test_rfc_7693 completed with %d errors\n\n", errors);
   return errors;
+
+}
+
+
+//------------------------------------------------------------------
+// test1
+// Test with one complete block.
+//------------------------------------------------------------------
+int test1() {
+  int errors = 0;
+  printf("test1 started\n");
+
+  blake2s_state my_state;
+  blake2s_init(&my_state, 32);
+
+
+  uint32_t my_message[16] = {0x00010203, 0x04050607, 0x08090a0b, 0x0c0d0e0f,
+                             0x10111213, 0x14151617, 0x18191a1b, 0x1c1d1e1f,
+                             0x20212223, 0x24252627, 0x28292a2b, 0x2c2d2e2f,
+                             0x30313233, 0x34353637, 0x38393a3b, 0x3c3d3e3f};
+
+  blake2s_update(&my_state, &my_message[0], 64);
+
+
+  uint8_t my_expected[32] = {0x75, 0xd0, 0xb8, 0xa3, 0x2a, 0x82, 0x15, 0x86,
+                             0x72, 0x5e, 0xdc, 0x5b, 0x61, 0xa9, 0x4e, 0xb8,
+                             0xff, 0xd7, 0xf8, 0xa1, 0xb1, 0xca, 0x4a, 0xca,
+                             0x3d, 0x69, 0x72, 0x77, 0x7c, 0x3b, 0xf4, 0xd6};
+
+  uint8_t my_tag[32];
+  blake2s_final(&my_state, &my_tag[0], 32);
+
+  printf("Generated tag:\n");
+  print_hexdata(&my_tag[0], 32);
+  errors += check_tag(&my_tag[0], &my_expected[0], 32);
+
+  printf("test1 completed with %d errors\n\n", errors);
+  return errors;
+
 }
 
 
@@ -126,6 +162,7 @@ int run_tests() {
   int test_results = 0;
 
   test_results += test_rfc_7693();
+  test_results += test1();
 
   printf("Number of failing test cases: %d\n", test_results);
 
