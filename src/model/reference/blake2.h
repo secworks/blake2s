@@ -141,6 +141,10 @@ extern "C" {
     BLAKE2_DUMMY_2 = 1/(sizeof(blake2b_param) == BLAKE2B_OUTBYTES)
   };
 
+  // Helper functions:
+  void print_hexdata(uint8_t *data, uint32_t len);
+  void dump_state(blake2s_state *s);
+
   /* Streaming API */
   int blake2s_init( blake2s_state *S, size_t outlen );
   int blake2s_init_key( blake2s_state *S, size_t outlen, const void *key, size_t keylen );

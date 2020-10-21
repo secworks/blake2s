@@ -38,22 +38,6 @@
 #include <stdint.h>
 #include "blake2.h"
 
-//------------------------------------------------------------------
-// print_hexdata()
-// Dump hex data
-//------------------------------------------------------------------
-void print_hexdata(uint8_t *data, uint32_t len) {
-  printf("Length: 0x%08x\n", len);
-
-  for (uint32_t i = 0 ; i < len ; i += 1) {
-    printf("0x%02x ", data[i]);
-    if ((i > 0) && ((i + 1) % 8 == 0))
-      printf("\n");
-  }
-
-  printf("\n");
-}
-
 
 //------------------------------------------------------------------
 // check_tag()

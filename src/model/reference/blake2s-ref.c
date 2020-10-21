@@ -40,6 +40,55 @@ static const uint8_t blake2s_sigma[10][16] =
   { 10,  2,  8,  4,  7,  6,  1,  5, 15, 11,  9, 14,  3, 12, 13 , 0 } ,
 };
 
+
+
+//------------------------------------------------------------------
+// print_hexdata()
+//------------------------------------------------------------------
+void print_hexdata(uint8_t *data, uint32_t len) {
+  printf("Length: 0x%08x\n", len);
+
+  for (uint32_t i = 0 ; i < len ; i += 1) {
+    printf("0x%02x ", data[i]);
+    if ((i > 0) && ((i + 1) % 8 == 0))
+      printf("\n");
+  }
+
+  printf("\n");
+}
+
+
+//------------------------------------------------------------------
+// print_hexdata()
+//------------------------------------------------------------------
+void dump_state(blake2s_state *s) {
+  printf("h0: 0x%04x, h1: 0x%04x, h2: 0x%04x, h3: 0x%04x\n",
+         s->h[0], s->h[1], s->h[2], s->h[3]);
+  printf("h4: 0x%04x, h5: 0x%04x, h6: 0x%04x, h7: 0x%04x\n",
+         s->h[4], s->h[5], s->h[6], s->h[7]);
+
+  printf("t0: 0x%04x, t1: 0x%04x\n", s->t[0], s->t[1]);
+  printf("f0: 0x%04x, f1: 0x%04x\n", s->f[0], s->f[1]);
+
+  printf("buf:\n");
+  for (int j = 0 ; j < 8 ; j++) {
+    for (int i = 0 ; i < 8 ; i++) {
+      printf("0x%02x ", s->buf[i + (8 * j)]);
+    }
+    printf("\n");
+  }
+  printf("\n");
+
+  printf("buflen:    0x%08zx\n", s->buflen);
+  printf("outlen:    0x%08zx\n", s->outlen);
+  printf("last_node: 0x%02x\n", s->last_node);
+
+  printf("\n");
+}
+
+
+//------------------------------------------------------------------
+//------------------------------------------------------------------
 static void blake2s_set_lastnode( blake2s_state *S )
 {
   S->f[1] = (uint32_t)-1;
@@ -175,6 +224,11 @@ static void blake2s_compress( blake2s_state *S, const uint8_t in[BLAKE2S_BLOCKBY
   uint32_t v[16];
   size_t i;
 
+  printf("Inside blake2s_compress\n");
+
+  printf("State before compressing:\n");
+  dump_state(S);
+
   for( i = 0; i < 16; ++i ) {
     m[i] = load32( in + i * sizeof( m[i] ) );
   }
@@ -206,6 +260,10 @@ static void blake2s_compress( blake2s_state *S, const uint8_t in[BLAKE2S_BLOCKBY
   for( i = 0; i < 8; ++i ) {
     S->h[i] = S->h[i] ^ v[i] ^ v[i + 8];
   }
+
+  printf("State after compressing:\n");
+  dump_state(S);
+  printf("blake2s_compress completed\n");
 }
 
 #undef G
