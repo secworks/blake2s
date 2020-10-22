@@ -57,9 +57,9 @@ int check_tag(uint8_t *tag, uint8_t *expected, uint8_t len) {
   else {
     printf("Correct tag NOT generated.\n");
     printf("Expected:\n");
-    print_hexdata(&expected[0], len);
+    print_hexbytes(&expected[0], len);
     printf("Got:\n");
-    print_hexdata(&tag[0], len);
+    print_hexbytes(&tag[0], len);
   }
   return error;
 }
@@ -74,13 +74,19 @@ int test_rfc_7693() {
   printf("test_rfc_7693 started\n");
 
   blake2s_state my_state;
+  printf("State before calling blake2s_init:\n");
+  dump_state(&my_state);
   blake2s_init(&my_state, 32);
+  printf("State after calling blake2s_init:\n");
+  dump_state(&my_state);
 
 
   uint32_t my_message[16] = {0x00636261, 0x00000000, 0x00000000, 0x00000000,
                              0x00000000, 0x00000000, 0x00000000, 0x00000000,
                              0x00000000, 0x00000000, 0x00000000, 0x00000000,
                              0x00000000, 0x00000000, 0x00000000, 0x00000000};
+
+  printf("Calling blake2s_update:\n");
   blake2s_update(&my_state, &my_message[0], 3);
 
 
@@ -93,7 +99,7 @@ int test_rfc_7693() {
   blake2s_final(&my_state, &my_tag[0], 32);
 
   printf("Generated tag:\n");
-  print_hexdata(&my_tag[0], 32);
+  print_hexbytes(&my_tag[0], 32);
   errors += check_tag(&my_tag[0], &my_expected[0], 32);
 
   printf("test_rfc_7693 completed with %d errors\n\n", errors);
@@ -131,7 +137,7 @@ int test1() {
   blake2s_final(&my_state, &my_tag[0], 32);
 
   printf("Generated tag:\n");
-  print_hexdata(&my_tag[0], 32);
+  print_hexbytes(&my_tag[0], 32);
   errors += check_tag(&my_tag[0], &my_expected[0], 32);
 
   printf("test1 completed with %d errors\n\n", errors);
@@ -169,7 +175,7 @@ int test2() {
   blake2s_final(&my_state, &my_tag[0], 32);
 
   printf("Generated tag:\n");
-  print_hexdata(&my_tag[0], 32);
+  print_hexbytes(&my_tag[0], 32);
   errors += check_tag(&my_tag[0], &my_expected[0], 32);
 
   printf("test2 completed with %d errors\n\n", errors);
@@ -184,8 +190,8 @@ int run_tests() {
   int test_results = 0;
 
   test_results += test_rfc_7693();
-  test_results += test1();
-  test_results += test2();
+//  test_results += test1();
+//  test_results += test2();
 
   printf("Number of failing test cases: %d\n", test_results);
 

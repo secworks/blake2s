@@ -142,7 +142,8 @@ extern "C" {
   };
 
   // Helper functions:
-  void print_hexdata(uint8_t *data, uint32_t len);
+  void print_hexbytes(uint8_t *data, uint32_t len);
+  void print_hexwords(uint32_t *data, uint32_t len);
   void dump_state(blake2s_state *s);
 
   /* Streaming API */

@@ -43,9 +43,9 @@ static const uint8_t blake2s_sigma[10][16] =
 
 
 //------------------------------------------------------------------
-// print_hexdata()
+// print_hexbytes()
 //------------------------------------------------------------------
-void print_hexdata(uint8_t *data, uint32_t len) {
+void print_hexbytes(uint8_t *data, uint32_t len) {
   printf("Length: 0x%08x\n", len);
 
   for (uint32_t i = 0 ; i < len ; i += 1) {
@@ -57,18 +57,33 @@ void print_hexdata(uint8_t *data, uint32_t len) {
   printf("\n");
 }
 
+//------------------------------------------------------------------
+// print_hexwords()
+//------------------------------------------------------------------
+void print_hexwords(uint32_t *data, uint32_t len) {
+  printf("Length: 0x%08x\n", len);
+
+  for (uint32_t i = 0 ; i < len ; i += 1) {
+    printf("0x%08x ", data[i]);
+    if ((i > 0) && ((i + 1) % 8 == 0))
+      printf("\n");
+  }
+
+  printf("\n");
+}
+
 
 //------------------------------------------------------------------
-// print_hexdata()
+// dump_state()
 //------------------------------------------------------------------
 void dump_state(blake2s_state *s) {
-  printf("h0: 0x%04x, h1: 0x%04x, h2: 0x%04x, h3: 0x%04x\n",
+  printf("h0: 0x%08x, h1: 0x%08x, h2: 0x%08x, h3: 0x%08x\n",
          s->h[0], s->h[1], s->h[2], s->h[3]);
-  printf("h4: 0x%04x, h5: 0x%04x, h6: 0x%04x, h7: 0x%04x\n",
+  printf("h4: 0x%08x, h5: 0x%08x, h6: 0x%08x, h7: 0x%08x\n",
          s->h[4], s->h[5], s->h[6], s->h[7]);
 
-  printf("t0: 0x%04x, t1: 0x%04x\n", s->t[0], s->t[1]);
-  printf("f0: 0x%04x, f1: 0x%04x\n", s->f[0], s->f[1]);
+  printf("t0: 0x%08x, t1: 0x%08x\n", s->t[0], s->t[1]);
+  printf("f0: 0x%08x, f1: 0x%08x\n", s->f[0], s->f[1]);
 
   printf("buf:\n");
   for (int j = 0 ; j < 8 ; j++) {
@@ -79,8 +94,8 @@ void dump_state(blake2s_state *s) {
   }
   printf("\n");
 
-  printf("buflen:    0x%08zx\n", s->buflen);
-  printf("outlen:    0x%08zx\n", s->outlen);
+  printf("buflen:    0x%016zx\n", s->buflen);
+  printf("outlen:    0x%016zx\n", s->outlen);
   printf("last_node: 0x%02x\n", s->last_node);
 
   printf("\n");
@@ -158,6 +173,7 @@ int blake2s_init( blake2s_state *S, size_t outlen )
   /* memset(P->reserved, 0, sizeof(P->reserved) ); */
   memset( P->salt,     0, sizeof( P->salt ) );
   memset( P->personal, 0, sizeof( P->personal ) );
+
   return blake2s_init_param( S, P );
 }
 
@@ -191,6 +207,7 @@ int blake2s_init_key( blake2s_state *S, size_t outlen, const void *key, size_t k
     blake2s_update( S, block, BLAKE2S_BLOCKBYTES );
     secure_zero_memory( block, BLAKE2S_BLOCKBYTES ); /* Burn the key from stack */
   }
+
   return 0;
 }
 
@@ -224,14 +241,20 @@ static void blake2s_compress( blake2s_state *S, const uint8_t in[BLAKE2S_BLOCKBY
   uint32_t v[16];
   size_t i;
 
-  printf("Inside blake2s_compress\n");
+  printf("\n");
+  printf("blake2s_compress called.\n");
 
   printf("State before compressing:\n");
   dump_state(S);
 
+  printf("Input given:\n");
+  print_hexbytes(in, BLAKE2S_BLOCKBYTES);
+
   for( i = 0; i < 16; ++i ) {
     m[i] = load32( in + i * sizeof( m[i] ) );
   }
+  printf("indata loaded into m:\n");
+  print_hexwords(m, 16);
 
   for( i = 0; i < 8; ++i ) {
     v[i] = S->h[i];
@@ -245,6 +268,9 @@ static void blake2s_compress( blake2s_state *S, const uint8_t in[BLAKE2S_BLOCKBY
   v[13] = S->t[1] ^ blake2s_IV[5];
   v[14] = S->f[0] ^ blake2s_IV[6];
   v[15] = S->f[1] ^ blake2s_IV[7];
+
+  printf("Contents of v before compressing:\n");
+  print_hexwords(v, 16);
 
   ROUND( 0 );
   ROUND( 1 );
@@ -263,7 +289,8 @@ static void blake2s_compress( blake2s_state *S, const uint8_t in[BLAKE2S_BLOCKBY
 
   printf("State after compressing:\n");
   dump_state(S);
-  printf("blake2s_compress completed\n");
+  printf("blake2s_compress completed.\n");
+  printf("\n");
 }
 
 #undef G
