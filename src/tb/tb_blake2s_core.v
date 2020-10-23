@@ -61,30 +61,29 @@ module tb_blake2s_core();
 
   reg            tb_init;
   reg            tb_next;
-  reg            tb_final_block;
+  reg            tb_finish;
   reg [511 : 0]  tb_block;
-  reg [31 : 0]   tb_final_length;
-  wire           tb_ready;
+  reg [5 : 0]    tb_blocklen;
   wire [255 : 0] tb_digest;
+  wire           tb_ready;
 
 
   //----------------------------------------------------------------
   // blake2_G device under test.
   //----------------------------------------------------------------
   blake2s_core dut(
-                    .clk(tb_clk),
-                    .reset_n(tb_reset_n),
+                   .clk(tb_clk),
+                   .reset_n(tb_reset_n),
 
-                    .init(tb_init),
-                    .next(tb_next),
-                    .final_block(tb_final_block),
+                   .init(tb_init),
+                   .next(tb_next),
+                   .finish(tb_finish),
 
-                    .block(tb_block),
-                    .final_length(tb_final_length),
+                   .block(tb_block),
+                   .blocklen(tb_blocklen),
 
-                    .ready(tb_ready),
-
-                    .digest(tb_digest)
+                   .digest(tb_digest),
+                   .ready(tb_ready)
                    );
 
 
@@ -205,16 +204,17 @@ module tb_blake2s_core();
   //----------------------------------------------------------------
   task init_sim;
     begin
-      cycle_ctr       = 0;
-      error_ctr       = 0;
-      tc_ctr          = 0;
-      tb_clk          = 0;
-      tb_reset_n      = 1;
-      tb_init         = 0;
-      tb_next         = 0;
-      tb_final_block  = 0;
-      tb_block        = 512'h0;
-      tb_final_length = 32'h0;
+      cycle_ctr   = 0;
+      error_ctr   = 0;
+      tc_ctr      = 0;
+
+      tb_clk      = 1'h0;
+      tb_reset_n  = 1'h1;
+      tb_init     = 1'h0;
+      tb_next     = 1'h0;
+      tb_finish   = 1'h0;
+      tb_block    = 512'h0;
+      tb_blocklen = 6'h0;
     end
   endtask // init_sim
 
@@ -227,9 +227,9 @@ module tb_blake2s_core();
   task reset_dut;
     begin
       $display("TB: Resetting dut.");
-      tb_reset_n = 0;
+      tb_reset_n = 1'h0;
       #(2 * CLK_PERIOD);
-      tb_reset_n = 1;
+      tb_reset_n = 1'h1;
       #(2 * CLK_PERIOD);
       $display("TB: Reset done.");
     end

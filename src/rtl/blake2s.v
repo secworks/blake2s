@@ -58,13 +58,12 @@ module blake2s(
   localparam ADDR_CTRL        = 8'h08;
   localparam CTRL_INIT_BIT    = 0;
   localparam CTRL_NEXT_BIT    = 1;
-  localparam CTRL_FINAL_BIT   = 2;
+  localparam CTRL_FINISH_BIT  = 2;
 
   localparam ADDR_STATUS      = 8'h09;
   localparam STATUS_READY_BIT = 0;
-  localparam STATUS_VALID_BIT = 1;
 
-  localparam ADDR_LENGTH      = 8'h0a;
+  localparam ADDR_BLOCKLEN    = 8'h0a;
 
   localparam ADDR_BLOCK_W00   = 8'h10;
   localparam ADDR_BLOCK_W15   = 8'h1f;
@@ -75,22 +74,20 @@ module blake2s(
 
   localparam CORE_NAME0   = 32'h626c616b; // "blak"
   localparam CORE_NAME1   = 32'h65327320; // "e2s "
-  localparam CORE_VERSION = 32'h302e3130; // "0.10"
+  localparam CORE_VERSION = 32'h302e3230; // "0.20"
 
 
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
   //----------------------------------------------------------------
-  reg init_reg;
-  reg init_new;
-  reg next_reg;
-  reg next_new;
-  reg final_reg;
-  reg final_new;
-  reg [6 : 0] final_length_reg;
-  reg         final_length_we;
-
-  reg ready_reg;
+  reg          init_reg;
+  reg          init_new;
+  reg          next_reg;
+  reg          next_new;
+  reg          finish_reg;
+  reg          finish_new;
+  reg [5 : 0]  blocklen_reg;
+  reg          blocklen_we;
 
   reg [31 : 0] block_mem [0 : 15];
   reg          block_mem_we;
@@ -100,7 +97,6 @@ module blake2s(
   // Wires.
   //----------------------------------------------------------------
   wire           core_ready;
-  wire [31 : 0]  core_final_length;
   wire [511 : 0] core_block;
   wire [255 : 0] core_digest;
 
@@ -110,12 +106,10 @@ module blake2s(
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
-  assign core_block   = {block_mem[00], block_mem[01], block_mem[02], block_mem[03],
-                         block_mem[04], block_mem[05], block_mem[06], block_mem[07],
-                         block_mem[08], block_mem[09], block_mem[10], block_mem[11],
-                         block_mem[12], block_mem[13], block_mem[14], block_mem[15]};
-
-  assign core_final_length = {25'h0, final_length_reg};
+  assign core_block = {block_mem[00], block_mem[01], block_mem[02], block_mem[03],
+                       block_mem[04], block_mem[05], block_mem[06], block_mem[07],
+                       block_mem[08], block_mem[09], block_mem[10], block_mem[11],
+                       block_mem[12], block_mem[13], block_mem[14], block_mem[15]};
 
   assign read_data = tmp_read_data;
 
@@ -129,14 +123,13 @@ module blake2s(
 
                     .init(init_reg),
                     .next(next_reg),
-                    .final_block(final_reg),
-                    .final_length(core_final_length),
+                    .finish(finish_reg),
 
                     .block(core_block),
+                    .blocklen(blocklen_reg),
 
-                    .ready(core_ready),
-
-                    .digest(core_digest)
+                    .digest(core_digest),
+                    .ready(core_ready)
                    );
 
 
@@ -152,21 +145,19 @@ module blake2s(
           for (i = 0 ; i < 16 ; i = i + 1)
             block_mem[i] <= 32'h0;
 
-          init_reg         <= 1'h0;
-          next_reg         <= 1'h0;
-          final_reg        <= 1'h0;
-          ready_reg        <= 1'h0;
-          final_length_reg <= 7'h0;
+          init_reg     <= 1'h0;
+          next_reg     <= 1'h0;
+          finish_reg   <= 1'h0;
+          blocklen_reg <= 6'h0;
         end
       else
         begin
-          ready_reg        <= core_ready;
-          init_reg         <= init_new;
-          next_reg         <= next_new;
-          final_reg        <= final_new;
+          init_reg   <= init_new;
+          next_reg   <= next_new;
+          finish_reg <= finish_new;
 
-          if (final_length_we)
-            final_length_reg <= write_data[6 : 0];
+          if (blocklen_we)
+            blocklen_reg <= write_data[5 : 0];
 
           if (block_mem_we)
             block_mem[address[3 : 0]] <= write_data;
@@ -175,16 +166,17 @@ module blake2s(
 
 
   //----------------------------------------------------------------
-  // Address decoder logic.
+  // api
+  // The interface command decoding logic.
   //----------------------------------------------------------------
   always @*
-    begin : addr_decoder
-      init_new        = 1'h0;
-      next_new        = 1'h0;
-      final_new       = 1'h0;
-      block_mem_we    = 1'h0;
-      final_length_we = 1'h0;
-      tmp_read_data   = 32'h0;
+    begin : api
+      init_new      = 1'h0;
+      next_new      = 1'h0;
+      finish_new    = 1'h0;
+      block_mem_we  = 1'h0;
+      blocklen_we   = 1'h0;
+      tmp_read_data = 32'h0;
 
       if (cs)
         begin
@@ -192,13 +184,13 @@ module blake2s(
             begin
               if (address == ADDR_CTRL)
                 begin
-                  init_new  = write_data[CTRL_INIT_BIT];
-                  next_new  = write_data[CTRL_NEXT_BIT];
-                  final_new = write_data[CTRL_FINAL_BIT];
+                  init_new   = write_data[CTRL_INIT_BIT];
+                  next_new   = write_data[CTRL_NEXT_BIT];
+                  finish_new = write_data[CTRL_FINISH_BIT];
                 end
 
-              if (address == ADDR_LENGTH)
-                final_length_we = 1;
+              if (address == ADDR_BLOCKLEN)
+                blocklen_we = 1;
 
               if ((address >= ADDR_BLOCK_W00) && (address <= ADDR_BLOCK_W15))
                 block_mem_we = 1;
@@ -216,13 +208,13 @@ module blake2s(
                   tmp_read_data = CORE_VERSION;
 
               if (address == ADDR_STATUS)
-                tmp_read_data = {31'h0, ready_reg};
+                tmp_read_data = {31'h0, core_ready};
 
-                if ((address >= ADDR_DIGEST0) && (address <= ADDR_DIGEST7))
-                  tmp_read_data = core_digest[(3 - (address - ADDR_DIGEST0)) * 32 +: 32];
+              if ((address >= ADDR_DIGEST0) && (address <= ADDR_DIGEST7))
+                tmp_read_data = core_digest[(3 - (address - ADDR_DIGEST0)) * 32 +: 32];
             end
         end
-    end // addr_decoder
+    end // api
 endmodule // blake2s
 
 //======================================================================
