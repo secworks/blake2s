@@ -244,16 +244,16 @@ static void blake2s_compress( blake2s_state *S, const uint8_t in[BLAKE2S_BLOCKBY
   printf("\n");
   printf("blake2s_compress called.\n");
 
-  printf("State before compressing:\n");
+  printf("blake2s_compress: State before compressing:\n");
   dump_state(S);
 
-  printf("Input given:\n");
+  printf("blake2s_compress: Indata given:\n");
   print_hexbytes(in, BLAKE2S_BLOCKBYTES);
 
   for( i = 0; i < 16; ++i ) {
     m[i] = load32( in + i * sizeof( m[i] ) );
   }
-  printf("indata loaded into m:\n");
+  printf("blake2s_compress: Indata loaded into m:\n");
   print_hexwords(m, 16);
 
   for( i = 0; i < 8; ++i ) {
@@ -269,19 +269,59 @@ static void blake2s_compress( blake2s_state *S, const uint8_t in[BLAKE2S_BLOCKBY
   v[14] = S->f[0] ^ blake2s_IV[6];
   v[15] = S->f[1] ^ blake2s_IV[7];
 
-  printf("Contents of v before compressing:\n");
+  printf("blake2s_compress: State of v before rounds:\n");
   print_hexwords(v, 16);
 
   ROUND( 0 );
+
+  printf("blake2s_compress: State of v after round 0:\n");
+  print_hexwords(v, 16);
+
   ROUND( 1 );
+
+  printf("blake2s_compress: State of v after round 1:\n");
+  print_hexwords(v, 16);
+
   ROUND( 2 );
+
+  printf("blake2s_compress: State of v after round 2:\n");
+  print_hexwords(v, 16);
+
   ROUND( 3 );
+
+  printf("blake2s_compress: State of v after round 3:\n");
+  print_hexwords(v, 16);
+
   ROUND( 4 );
+
+  printf("blake2s_compress: State of v after round 4:\n");
+  print_hexwords(v, 16);
+
   ROUND( 5 );
+
+  printf("blake2s_compress: State of v after round 5:\n");
+  print_hexwords(v, 16);
+
   ROUND( 6 );
+
+  printf("blake2s_compress: State of v after round 6:\n");
+  print_hexwords(v, 16);
+
   ROUND( 7 );
+
+  printf("blake2s_compress: State of v after round 7:\n");
+  print_hexwords(v, 16);
+
   ROUND( 8 );
+
+  printf("blake2s_compress: State of v after round 8:\n");
+  print_hexwords(v, 16);
+
   ROUND( 9 );
+
+  printf("blake2s_compress: State of v after round 9:\n");
+  print_hexwords(v, 16);
+
 
   for( i = 0; i < 8; ++i ) {
     S->h[i] = S->h[i] ^ v[i] ^ v[i + 8];
@@ -289,6 +329,7 @@ static void blake2s_compress( blake2s_state *S, const uint8_t in[BLAKE2S_BLOCKBY
 
   printf("State after compressing:\n");
   dump_state(S);
+
   printf("blake2s_compress completed.\n");
   printf("\n");
 }

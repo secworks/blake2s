@@ -38,7 +38,7 @@ CFLAGS = -O2  -Wall -Wextra -std=c99 -pedantic -Wno-long-long
 BLAKEBINS = blake2s test_blake2s
 
 
-all:		$(BLAKEBINS) check
+all:		$(BLAKEBINS)
 
 blake2s:	blake2s-ref.c
 		$(CC) blake2s-ref.c -o $@ $(CFLAGS) -DBLAKE2S_SELFTEST
