@@ -157,6 +157,10 @@ module blake2s_core(
   reg          t_ctr_inc;
   reg          t_ctr_rst;
 
+  reg [31 : 0] f0_reg;
+  reg [31 : 0] f0_new;
+  reg          f0_we;
+
   reg [31 : 0] f1_reg;
   reg [31 : 0] f1_new;
   reg          f1_we;
@@ -339,6 +343,7 @@ module blake2s_core(
 
           t0_reg           <= 32'h0;
           t1_reg           <= 32'h0;
+          f0_reg           <= 32'h0;
           f1_reg           <= 32'h0;
           ready_reg        <= 1'h1;
           G_mode_reg       <= G_ROW;
@@ -364,6 +369,9 @@ module blake2s_core(
 
           if (t1_we)
             t1_reg <= t1_new;
+
+          if (f0_we)
+            f0_reg <= f0_new;
 
           if (f1_we)
             f1_reg <= f1_new;
@@ -433,6 +441,8 @@ module blake2s_core(
     begin : state_logic
       integer i;
 
+      f0_new = 32'h0;;
+
       for (i = 0; i < 16; i = i + 1)
         v_new[i] = 32'h0;
       v_we = 1'h0;
@@ -470,7 +480,7 @@ module blake2s_core(
           v_new[11] = IV3;
           v_new[12] = t0_reg ^ IV4;
           v_new[13] = t1_reg ^ IV5;
-          v_new[14] = {IV6 ^ {32{final_block}}};
+          v_new[14] = f0_reg ^ IV6;
           v_new[15] = f1_reg ^ IV7;
           v_we = 1;
         end
