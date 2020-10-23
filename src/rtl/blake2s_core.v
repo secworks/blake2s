@@ -133,18 +133,20 @@ module blake2s_core(
   reg [31 : 0] v_reg [0 : 15];
   reg [31 : 0] v_new [0 : 15];
   reg          v_we;
+  reg          init_v;
+  reg          update_v;
 
-  reg         G_mode_reg;
-  reg         G_mode_new;
-  reg         G_mode_we;
-  reg         G_mode_inc;
-  reg         G_mode_rst;
+  reg          G_mode_reg;
+  reg          G_mode_new;
+  reg          G_mode_we;
+  reg          G_mode_inc;
+  reg          G_mode_rst;
 
-  reg [3 : 0] round_ctr_reg;
-  reg [3 : 0] round_ctr_new;
-  reg         round_ctr_we;
-  reg         round_ctr_inc;
-  reg         round_ctr_rst;
+  reg [3 : 0]  round_ctr_reg;
+  reg [3 : 0]  round_ctr_new;
+  reg          round_ctr_we;
+  reg          round_ctr_inc;
+  reg          round_ctr_rst;
 
   reg [31 : 0] t0_reg;
   reg [31 : 0] t0_new;
@@ -177,8 +179,8 @@ module blake2s_core(
   //----------------------------------------------------------------
   reg init_state;
   reg update_state;
-  reg fix_final_block;
   reg load_m;
+  reg fix_final_block;
   reg update_chain_value;
 
   reg  [31 : 0] G0_a;
@@ -431,12 +433,10 @@ module blake2s_core(
 
 
   //----------------------------------------------------------------
-  // state_logic
-  //
-  // Logic to init and update the internal state.
+  // compress_logic
   //----------------------------------------------------------------
   always @*
-    begin : state_logic
+    begin : compress_logic
       integer i;
 
       f0_new = 32'h0;;
@@ -462,16 +462,16 @@ module blake2s_core(
       G3_c = 32'h0;
       G3_d = 32'h0;
 
-      if (init_state)
+      if (init_v)
         begin
-          v_new[0]  = IV0 ^ parameter_block[31:0];
-          v_new[1]  = IV1 ^ parameter_block[63:32];
-          v_new[2]  = IV2 ^ parameter_block[95:64];
-          v_new[3]  = IV3 ^ parameter_block[127:96];
-          v_new[4]  = IV4 ^ parameter_block[159:128];
-          v_new[5]  = IV5 ^ parameter_block[191:160];
-          v_new[6]  = IV6 ^ parameter_block[223:192];
-          v_new[7]  = IV7 ^ parameter_block[255:224];
+          v_new[0]  = h_reg[0];
+          v_new[1]  = h_reg[0];
+          v_new[2]  = h_reg[0];
+          v_new[3]  = h_reg[0];
+          v_new[4]  = h_reg[0];
+          v_new[5]  = h_reg[0];
+          v_new[6]  = h_reg[0];
+          v_new[7]  = h_reg[0];
           v_new[8]  = IV0;
           v_new[9]  = IV1;
           v_new[10] = IV2;
@@ -483,7 +483,7 @@ module blake2s_core(
           v_we = 1;
         end
 
-      if (update_state)
+      if (update_v)
         begin
           v_we = 1;
 
@@ -566,7 +566,7 @@ module blake2s_core(
               v_new[14] = G3_d_prim;
             end // else: !if(G_mode_reg == STATE_G0)
         end // if (update_state)
-    end // block: state_logic
+    end // compress_logic
 
 
   //----------------------------------------------------------------
@@ -662,12 +662,14 @@ module blake2s_core(
     begin : blake2s_ctrl_fsm
       init_state         = 1'h0;
       update_state       = 1'h0;
+      init_v             = 1'h0;
+      update_v           = 1'h0;
       fix_final_block    = 1'h0;
       load_m             = 1'h0;
       G_mode_inc         = 1'h0;
       G_mode_rst         = 1'h0;
-      round_ctr_inc         = 1'h0;
-      round_ctr_rst         = 1'h0;
+      round_ctr_inc      = 1'h0;
+      round_ctr_rst      = 1'h0;
       t_ctr_inc          = 1'h0;
       t_ctr_rst          = 1'h0;
       f1_new             = 32'h0;
