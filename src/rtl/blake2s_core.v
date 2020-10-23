@@ -393,12 +393,12 @@ module blake2s_core(
 
 
   //----------------------------------------------------------------
-  // chain_logic
+  // state_logic
   //
-  // Logic for updating the chain registers.
+  // Logic for updating the hash state.
   //----------------------------------------------------------------
   always @*
-    begin : chain_logic
+    begin : state_logic
       integer i;
 
       for (i = 0; i < 8; i = i + 1)
@@ -418,7 +418,7 @@ module blake2s_core(
           h_we = 1;
         end
 
-      if (update_chain_value)
+      if (update_state)
         begin
           h_new[0] = h_reg[0] ^ v_reg[0] ^ v_reg[8];
           h_new[1] = h_reg[1] ^ v_reg[1] ^ v_reg[9];
@@ -430,7 +430,7 @@ module blake2s_core(
           h_new[7] = h_reg[7] ^ v_reg[7] ^ v_reg[15];
           h_we = 1;
         end
-    end // chain_logic
+    end // state_logic
 
 
   //----------------------------------------------------------------
@@ -566,7 +566,7 @@ module blake2s_core(
               v_new[9]  = G3_c_prim;
               v_new[14] = G3_d_prim;
             end // else: !if(G_mode_reg == STATE_G0)
-        end // if (update_state)
+        end // if (update_v)
     end // compress_logic
 
 
