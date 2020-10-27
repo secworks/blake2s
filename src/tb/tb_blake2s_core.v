@@ -55,6 +55,7 @@ module tb_blake2s_core();
   reg [31 : 0]   error_ctr;
   reg [31 : 0]   tc_ctr;
   reg            display_cycle_ctr;
+  reg            display_dut_state;
 
   reg            tb_clk;
   reg            tb_reset_n;
@@ -111,8 +112,11 @@ module tb_blake2s_core();
       if (display_cycle_ctr)
         begin
           $display("cycle = %016x:", cycle_ctr);
+          $display("");
         end
 
+      if (display_dut_state)
+        dump_dut_state();
     end // dut_monitor
 
 
@@ -125,10 +129,12 @@ module tb_blake2s_core();
     begin
       if (VERBOSE)
         begin
+          $display("-------------------------------------------------------------------------------------");
           $display("");
           $display("DUT internal state");
           $display("------------------");
           $display("");
+          $display("-------------------------------------------------------------------------------------");
         end
     end
   endtask // dump_dut_state
@@ -208,6 +214,9 @@ module tb_blake2s_core();
       error_ctr   = 0;
       tc_ctr      = 0;
 
+      display_cycle_ctr = 1;
+      display_dut_state = 0;
+
       tb_clk      = 1'h0;
       tb_reset_n  = 1'h1;
       tb_init     = 1'h0;
@@ -237,22 +246,84 @@ module tb_blake2s_core();
 
 
   //----------------------------------------------------------------
+  // test_rfc_7693
+  // Test using testvectors from RFC 7693.
+  //----------------------------------------------------------------
+  task test_rfc_7693;
+    begin : test_rfc_7693
+      tc_ctr = tc_ctr + 1;
+
+      $display("");
+      $display("*** test_rfc_7693 started.\n");
+
+      display_dut_state = 1;
+      $display("test_rfc_7693: asserting init.\n");
+      tb_init = 1'h1;
+      #(CLK_PERIOD);
+      tb_init = 1'h0;
+      $display("test_rfc_7693: init should be completed.\n");
+      $display("");
+
+
+      #(CLK_PERIOD);
+      $display("test_rfc_7693: asserting next.\n");
+      tb_block = {32'h00636261, {15{32'h0}}};
+      tb_next = 1'h1;
+      #(CLK_PERIOD);
+      tb_next = 1'h1;
+      wait_ready();
+      $display("test_rfc_7693: next should be completed.\n");
+      $display("");
+
+
+      #(CLK_PERIOD);
+      $display("test_rfc_7693: asserting finish.\n");
+      tb_finish = 1'h1;
+      #(CLK_PERIOD);
+      tb_finish = 1'h1;
+      wait_ready();
+      $display("test_rfc_7693: finish should be completed.\n");
+      $display("");
+      #(CLK_PERIOD);
+      display_dut_state = 0;
+
+      $display("test_rfc_7693: Checking generated digest.\n");
+      if (tb_digest == 256'h508c5e8c327c14e2_e1a72ba34eeb452f_37458b209ed63a29_4d999b4c86675982)
+        $display("test_rfc_7693: Correct digest generated.");
+      else begin
+        $display("test_rfc_7693: Error. Incorrect digest generated.");
+        $display("test_rfc_7693: Expected: 0x508c5e8c327c14e2e1a72ba34eeb452f37458b209ed63a294d999b4c86675982");
+        $display("test_rfc_7693: Got:      0x%064x", tb_digest);
+        error_ctr = error_ctr + 1;
+      end
+
+      $display("*** test_rfc_7693 completed.\n");
+      $display("");
+    end
+  endtask // test_rfc_7693
+
+
+  //----------------------------------------------------------------
   // testrunner
   //
   // The main test functionality.
   //----------------------------------------------------------------
   initial
     begin : testrunner
-      $display("*** Testbench for Blake2 core function test started ***");
-      $display("-------------------------------------------------------");
+      $display("*** Testbench for Blake2s core function test started ***");
+      $display("--------------------------------------------------------");
       $display("");
 
       init_sim();
       reset_dut();
 
+      test_rfc_7693();
+
       display_test_result();
 
-      $display("*** Blake2 core functions simulation completed ****");
+      $display("*** Blake2s core functions simulation completed ****");
+      $display("-----------------------------------------------------");
+      $display("");
       $finish_and_return(error_ctr);
     end // testrunner
 
