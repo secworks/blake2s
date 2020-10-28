@@ -70,7 +70,7 @@ module tb_blake2s_core();
 
 
   //----------------------------------------------------------------
-  // blake2_G device under test.
+  // Device under test.
   //----------------------------------------------------------------
   blake2s_core dut(
                    .clk(tb_clk),
@@ -127,15 +127,38 @@ module tb_blake2s_core();
   //----------------------------------------------------------------
   task dump_dut_state;
     begin
-      if (VERBOSE)
-        begin
-          $display("-------------------------------------------------------------------------------------");
-          $display("");
-          $display("DUT internal state");
-          $display("------------------");
-          $display("");
-          $display("-------------------------------------------------------------------------------------");
-        end
+      $display("-------------------------------------------------------------------------------------");
+      $display("");
+      $display("DUT internal state");
+      $display("------------------");
+      $display("init:    0x%01x, next: 0x%01x, finish: 0x%01x", dut.init, dut.next, dut.finish);
+      $display("block M: 0x%064x", dut.block[511 : 256]);
+      $display("block L: 0x%064x", dut.block[255 : 000]);
+      $display("ready:   0x%01x", dut.ready);
+      $display("");
+      $display("blake2s_ctrl_reg: 0x%02x, blake2s_ctrl_new: 0x%02x, blake2s_ctrl_we: 0x%01x",
+               dut.blake2s_ctrl_reg, dut.blake2s_ctrl_new, dut.blake2s_ctrl_we);
+      $display("");
+      $display("h0: 0x%08x, h1: 0x%08x, h2: 0x%08x, h3: 0x%08x",
+               dut.h_reg[0], dut.h_reg[1], dut.h_reg[2], dut.h_reg[3]);
+      $display("h4: 0x%08x, h5: 0x%08x, h6: 0x%08x, h7: 0x%08x",
+               dut.h_reg[4], dut.h_reg[5], dut.h_reg[6], dut.h_reg[7]);
+      $display("");
+      $display("v0:  0x%08x, v1:  0x%08x, v2:  0x%08x, v3:  0x%08x",
+               dut.v_reg[0], dut.v_reg[1], dut.v_reg[2], dut.v_reg[3]);
+      $display("v4:  0x%08x, v5:  0x%08x, v6:  0x%08x, v7:  0x%08x",
+               dut.v_reg[4], dut.v_reg[5], dut.v_reg[6], dut.v_reg[7]);
+      $display("v8:  0x%08x, v9:  0x%08x, v10: 0x%08x, v11: 0x%08x",
+               dut.v_reg[8], dut.v_reg[8], dut.v_reg[10], dut.v_reg[11]);
+      $display("v12: 0x%08x, v13: 0x%08x, v14: 0x%08x, v15: 0x%08x",
+               dut.v_reg[12], dut.v_reg[13], dut.v_reg[14], dut.v_reg[15]);
+      $display("");
+      $display("t0_reg: 0x%08x, t0_new: 0x%08x", dut.t0_reg, dut.t0_new);
+      $display("t1_reg: 0x%08x, t1_new: 0x%08x", dut.t1_reg, dut.t1_new);
+      $display("");
+      $display("f0_reg: 0x%08x, f0_new: 0x%08x", dut.f0_reg, dut.f0_new);
+      $display("f1_reg: 0x%08x, f1_new: 0x%08x", dut.f1_reg, dut.f1_new);
+      $display("-------------------------------------------------------------------------------------");
     end
   endtask // dump_dut_state
 
