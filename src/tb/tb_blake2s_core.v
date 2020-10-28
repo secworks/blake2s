@@ -293,7 +293,7 @@ module tb_blake2s_core();
       tb_block = {32'h00636261, {15{32'h0}}};
       tb_next = 1'h1;
       #(CLK_PERIOD);
-      tb_next = 1'h1;
+      tb_next = 1'h0;
       wait_ready();
       $display("test_rfc_7693: next should be completed.\n");
       $display("");
