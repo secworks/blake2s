@@ -122,11 +122,22 @@ static void blake2s_set_lastblock( blake2s_state *S )
   S->f[0] = (uint32_t)-1;
 }
 
+
 static void blake2s_increment_counter( blake2s_state *S, const uint32_t inc )
 {
+  printf("blake2s_increment_counter called with inc: 0x%08x\n", inc);
+  printf("Counter before increment\n");
+  printf("t[0]: 0x%08x, t[1]: 0x%08x\n", S->t[0], S->t[1]);
+
   S->t[0] += inc;
   S->t[1] += ( S->t[0] < inc );
+
+  printf("Counter after increment\n");
+  printf("t[0]: 0x%08x, t[1]: 0x%08x\n", S->t[0], S->t[1]);
+  printf("blake2s_increment_counter done\n");
+  printf("\n");
 }
+
 
 static void blake2s_init0( blake2s_state *S )
 {
@@ -339,6 +350,9 @@ static void blake2s_compress( blake2s_state *S, const uint8_t in[BLAKE2S_BLOCKBY
 
 int blake2s_update( blake2s_state *S, const void *pin, size_t inlen )
 {
+  printf("blake2s_update called\n");
+  printf("\n");
+
   const unsigned char * in = (const unsigned char *)pin;
   if( inlen > 0 )
   {
@@ -361,11 +375,18 @@ int blake2s_update( blake2s_state *S, const void *pin, size_t inlen )
     memcpy( S->buf + S->buflen, in, inlen );
     S->buflen += inlen;
   }
+
+  printf("blake2s_update completed\n");
+  printf("\n");
   return 0;
 }
 
+
 int blake2s_final( blake2s_state *S, void *out, size_t outlen )
 {
+  printf("blake2s_final called\n");
+  printf("\n");
+
   uint8_t buffer[BLAKE2S_OUTBYTES] = {0};
   size_t i;
 
@@ -385,8 +406,13 @@ int blake2s_final( blake2s_state *S, void *out, size_t outlen )
 
   memcpy( out, buffer, outlen );
   secure_zero_memory(buffer, sizeof(buffer));
+
+  printf("blake2s_final completed\n");
+  printf("\n");
+
   return 0;
 }
+
 
 int blake2s( void *out, size_t outlen, const void *in, size_t inlen, const void *key, size_t keylen )
 {
