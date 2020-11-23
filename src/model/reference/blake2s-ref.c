@@ -222,17 +222,29 @@ int blake2s_init_key( blake2s_state *S, size_t outlen, const void *key, size_t k
   return 0;
 }
 
+
 #define G(r,i,a,b,c,d)                      \
   do {                                      \
+    printf("Inside G function.\n");         \
     a = a + b + m[blake2s_sigma[r][2*i+0]]; \
+    printf("a0: 0x%08x\n", a);              \
     d = rotr32(d ^ a, 16);                  \
+    printf("d0: 0x%08x\n", d);              \
     c = c + d;                              \
+    printf("c0: 0x%08x\n", c);              \
     b = rotr32(b ^ c, 12);                  \
+    printf("b0: 0x%08x\n", b);              \
     a = a + b + m[blake2s_sigma[r][2*i+1]]; \
+    printf("a1: 0x%08x\n", a);              \
     d = rotr32(d ^ a, 8);                   \
+    printf("d1: 0x%08x\n", d);              \
     c = c + d;                              \
+    printf("c1: 0x%08x\n", c);              \
     b = rotr32(b ^ c, 7);                   \
+    printf("b1: 0x%08x\n", b);              \
+    printf("LeavingG function.\n\n");       \
   } while(0)
+
 
 #define ROUND(r)                    \
   do {                              \
@@ -245,6 +257,7 @@ int blake2s_init_key( blake2s_state *S, size_t outlen, const void *key, size_t k
     G(r,6,v[ 2],v[ 7],v[ 8],v[13]); \
     G(r,7,v[ 3],v[ 4],v[ 9],v[14]); \
   } while(0)
+
 
 static void blake2s_compress( blake2s_state *S, const uint8_t in[BLAKE2S_BLOCKBYTES] )
 {
