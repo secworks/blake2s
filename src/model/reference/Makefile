@@ -35,20 +35,19 @@
 
 CC = clang
 CFLAGS = -O2  -Wall -Wextra -std=c99 -pedantic -Wno-long-long
-BLAKEBINS = blake2s test_blake2s
+BLAKEBINS = test_blake2s
 
 
 all:		$(BLAKEBINS)
 
-blake2s:	blake2s-ref.c
-		$(CC) blake2s-ref.c -o $@ $(CFLAGS) -DBLAKE2S_SELFTEST
-
 test_blake2s:	test_blake2s.c blake2.h blake2s-ref.c
 		$(CC) test_blake2s.c -o $@ $(CFLAGS) -Iblake2.h blake2s-ref.c
 
-check:          $(BLAKEBINS)
-	        ./blake2s
+run:		$(BLAKEBINS)
 		./test_blake2s
+
+log:		$(BLAKEBINS)
+		./test_blake2s > run.log
 
 clean:
 		rm -rf $(BLAKEBINS)
