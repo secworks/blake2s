@@ -1,17 +1,20 @@
-/*
-   BLAKE2 reference source code package - reference C implementations
-
-   Copyright 2012, Samuel Neves <sneves@dei.uc.pt>.  You may use this under the
-   terms of the CC0, the OpenSSL Licence, or the Apache Public License 2.0, at
-   your option.  The terms of these licenses can be found at:
-
-   - CC0 1.0 Universal : http://creativecommons.org/publicdomain/zero/1.0
-   - OpenSSL license   : https://www.openssl.org/source/license.html
-   - Apache 2.0        : http://www.apache.org/licenses/LICENSE-2.0
-
-   More information about the BLAKE2 hash function can be found at
-   https://blake2.net.
-*/
+//======================================================================
+//
+// BLAKE2 reference source code package - reference C implementations
+//
+// Copyright 2012, Samuel Neves <sneves@dei.uc.pt>.  You may use this
+// under the terms of the CC0, the OpenSSL Licence, or the Apache Public
+// License 2.0, at your option. The terms of these licenses can
+// be found at:
+//
+// CC0 1.0 Universal : http://creativecommons.org/publicdomain/zero/1.0
+// OpenSSL license   : https://www.openssl.org/source/license.html
+// Apache 2.0        : http://www.apache.org/licenses/LICENSE-2.0
+//
+// More information about the BLAKE2 hash function can be found at
+// https://blake2.net.
+//
+//======================================================================
 
 #include <stdint.h>
 #include <string.h>
@@ -20,11 +23,52 @@
 #include "blake2.h"
 #include "blake2-impl.h"
 
+
+//------------------------------------------------------------------
+// G function and round defines.
+//------------------------------------------------------------------
+#define G(r,i,a,b,c,d)                      \
+  do {                                      \
+    printf("Inside G function.\n");         \
+    a = a + b + m[blake2s_sigma[r][2*i+0]]; \
+    printf("a0: 0x%08x\n", a);              \
+    d = rotr32(d ^ a, 16);                  \
+    printf("d0: 0x%08x\n", d);              \
+    c = c + d;                              \
+    printf("c0: 0x%08x\n", c);              \
+    b = rotr32(b ^ c, 12);                  \
+    printf("b0: 0x%08x\n", b);              \
+    a = a + b + m[blake2s_sigma[r][2*i+1]]; \
+    printf("a1: 0x%08x\n", a);              \
+    d = rotr32(d ^ a, 8);                   \
+    printf("d1: 0x%08x\n", d);              \
+    c = c + d;                              \
+    printf("c1: 0x%08x\n", c);              \
+    b = rotr32(b ^ c, 7);                   \
+    printf("b1: 0x%08x\n", b);              \
+    printf("LeavingG function.\n\n");       \
+  } while(0)
+
+
+#define ROUND(r)                    \
+  do {                              \
+    G(r,0,v[ 0],v[ 4],v[ 8],v[12]); \
+    G(r,1,v[ 1],v[ 5],v[ 9],v[13]); \
+    G(r,2,v[ 2],v[ 6],v[10],v[14]); \
+    G(r,3,v[ 3],v[ 7],v[11],v[15]); \
+    G(r,4,v[ 0],v[ 5],v[10],v[15]); \
+    G(r,5,v[ 1],v[ 6],v[11],v[12]); \
+    G(r,6,v[ 2],v[ 7],v[ 8],v[13]); \
+    G(r,7,v[ 3],v[ 4],v[ 9],v[14]); \
+  } while(0)
+
+
 static const uint32_t blake2s_IV[8] =
 {
   0x6A09E667UL, 0xBB67AE85UL, 0x3C6EF372UL, 0xA54FF53AUL,
   0x510E527FUL, 0x9B05688CUL, 0x1F83D9ABUL, 0x5BE0CD19UL
 };
+
 
 static const uint8_t blake2s_sigma[10][16] =
 {
@@ -39,7 +83,6 @@ static const uint8_t blake2s_sigma[10][16] =
   {  6, 15, 14,  9, 11,  3,  0,  8, 12,  2, 13,  7,  1,  4, 10,  5 } ,
   { 10,  2,  8,  4,  7,  6,  1,  5, 15, 11,  9, 14,  3, 12, 13 , 0 } ,
 };
-
 
 
 //------------------------------------------------------------------
@@ -110,11 +153,15 @@ static void blake2s_set_lastnode( blake2s_state *S )
 }
 
 /* Some helper functions, not necessarily useful */
+//------------------------------------------------------------------
+//------------------------------------------------------------------
 static int blake2s_is_lastblock( const blake2s_state *S )
 {
   return S->f[0] != 0;
 }
 
+//------------------------------------------------------------------
+//------------------------------------------------------------------
 static void blake2s_set_lastblock( blake2s_state *S )
 {
   if( S->last_node ) blake2s_set_lastnode( S );
@@ -123,6 +170,8 @@ static void blake2s_set_lastblock( blake2s_state *S )
 }
 
 
+//------------------------------------------------------------------
+//------------------------------------------------------------------
 static void blake2s_increment_counter( blake2s_state *S, const uint32_t inc )
 {
   printf("blake2s_increment_counter called with inc: 0x%08x\n", inc);
@@ -139,6 +188,8 @@ static void blake2s_increment_counter( blake2s_state *S, const uint32_t inc )
 }
 
 
+//------------------------------------------------------------------
+//------------------------------------------------------------------
 static void blake2s_init0( blake2s_state *S )
 {
   size_t i;
@@ -147,7 +198,9 @@ static void blake2s_init0( blake2s_state *S )
   for( i = 0; i < 8; ++i ) S->h[i] = blake2s_IV[i];
 }
 
-/* init2 xors IV with input parameter block */
+//------------------------------------------------------------------
+// init2 xors IV with input parameter block
+//------------------------------------------------------------------
 int blake2s_init_param( blake2s_state *S, const blake2s_param *P )
 {
   const unsigned char *p = ( const unsigned char * )( P );
@@ -164,7 +217,9 @@ int blake2s_init_param( blake2s_state *S, const blake2s_param *P )
 }
 
 
-/* Sequential blake2s initialization */
+//------------------------------------------------------------------
+// Sequential blake2s initialization
+//------------------------------------------------------------------
 int blake2s_init( blake2s_state *S, size_t outlen )
 {
   blake2s_param P[1];
@@ -188,6 +243,8 @@ int blake2s_init( blake2s_state *S, size_t outlen )
   return blake2s_init_param( S, P );
 }
 
+//------------------------------------------------------------------
+//------------------------------------------------------------------
 int blake2s_init_key( blake2s_state *S, size_t outlen, const void *key, size_t keylen )
 {
   blake2s_param P[1];
@@ -223,42 +280,8 @@ int blake2s_init_key( blake2s_state *S, size_t outlen, const void *key, size_t k
 }
 
 
-#define G(r,i,a,b,c,d)                      \
-  do {                                      \
-    printf("Inside G function.\n");         \
-    a = a + b + m[blake2s_sigma[r][2*i+0]]; \
-    printf("a0: 0x%08x\n", a);              \
-    d = rotr32(d ^ a, 16);                  \
-    printf("d0: 0x%08x\n", d);              \
-    c = c + d;                              \
-    printf("c0: 0x%08x\n", c);              \
-    b = rotr32(b ^ c, 12);                  \
-    printf("b0: 0x%08x\n", b);              \
-    a = a + b + m[blake2s_sigma[r][2*i+1]]; \
-    printf("a1: 0x%08x\n", a);              \
-    d = rotr32(d ^ a, 8);                   \
-    printf("d1: 0x%08x\n", d);              \
-    c = c + d;                              \
-    printf("c1: 0x%08x\n", c);              \
-    b = rotr32(b ^ c, 7);                   \
-    printf("b1: 0x%08x\n", b);              \
-    printf("LeavingG function.\n\n");       \
-  } while(0)
-
-
-#define ROUND(r)                    \
-  do {                              \
-    G(r,0,v[ 0],v[ 4],v[ 8],v[12]); \
-    G(r,1,v[ 1],v[ 5],v[ 9],v[13]); \
-    G(r,2,v[ 2],v[ 6],v[10],v[14]); \
-    G(r,3,v[ 3],v[ 7],v[11],v[15]); \
-    G(r,4,v[ 0],v[ 5],v[10],v[15]); \
-    G(r,5,v[ 1],v[ 6],v[11],v[12]); \
-    G(r,6,v[ 2],v[ 7],v[ 8],v[13]); \
-    G(r,7,v[ 3],v[ 4],v[ 9],v[14]); \
-  } while(0)
-
-
+//------------------------------------------------------------------
+//------------------------------------------------------------------
 static void blake2s_compress( blake2s_state *S, const uint8_t in[BLAKE2S_BLOCKBYTES] )
 {
   uint32_t m[16];
@@ -358,9 +381,9 @@ static void blake2s_compress( blake2s_state *S, const uint8_t in[BLAKE2S_BLOCKBY
   printf("\n");
 }
 
-#undef G
-#undef ROUND
 
+//------------------------------------------------------------------
+//------------------------------------------------------------------
 int blake2s_update( blake2s_state *S, const void *pin, size_t inlen )
 {
   printf("blake2s_update called\n");
@@ -395,6 +418,8 @@ int blake2s_update( blake2s_state *S, const void *pin, size_t inlen )
 }
 
 
+//------------------------------------------------------------------
+//------------------------------------------------------------------
 int blake2s_final( blake2s_state *S, void *out, size_t outlen )
 {
   printf("blake2s_final called\n");
@@ -427,6 +452,8 @@ int blake2s_final( blake2s_state *S, void *out, size_t outlen )
 }
 
 
+//------------------------------------------------------------------
+//------------------------------------------------------------------
 int blake2s( void *out, size_t outlen, const void *in, size_t inlen, const void *key, size_t keylen )
 {
   blake2s_state S[1];
@@ -455,3 +482,5 @@ int blake2s( void *out, size_t outlen, const void *in, size_t inlen, const void 
   blake2s_final( S, out, outlen );
   return 0;
 }
+
+//======================================================================
