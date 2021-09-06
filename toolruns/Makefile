@@ -48,7 +48,7 @@ TB_GF_SRC = ../src/tb/tb_blake2s_G.v
 TB_M_SELECT_SRC = ../src/tb/tb_blake2s_m_select.v
 TB_ROUND_SRC = ../src/tb/tb_blake2s_round.v
 TB_CORE_SRC = ../src/tb/tb_blake2s_core.v
-TB_TOP_SRC = ../src/tb/tb_blake2s_core.v
+TB_TOP_SRC = ../src/tb/tb_blake2s.v
 
 
 # Tools and flags.
