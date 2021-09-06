@@ -10,7 +10,8 @@
 
 ## Log files
 *.log
-
+*.txt
+test_*
 
 ## Subdirs in toolruns for vendor tools
 /toolruns/quartus
