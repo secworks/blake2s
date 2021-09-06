@@ -1,0 +1,53 @@
+CAPI=2:
+
+name : secworks:crypto:blake2s:0
+
+filesets:
+  rtl:
+    files:
+      - srt/rtlblake2s.v
+      - srt/rtlblake2s_core.v
+      - srt/rtlblake2s_m_select.v
+      - srt/rtlblake2s_round.v
+      - srt/rtlblake2s_G.v
+    file_type : verilogSource
+
+  tb:
+    files:
+      - src/rtl/tb_blake2s_G.v
+      - src/rtl/tb_blake2s_core.v
+      - src/rtl/tb_blake2s_m_select.v
+      - src/rtl/tb_blake2s_round.v
+    file_type : verilogSource
+
+  openlane: {files : [data/sky130.tcl : {file_type : tclSource}]}
+
+targets:
+  default:
+    filesets: [rtl]
+
+  lint:
+    default_tool : verilator
+    filesets : [rtl]
+    tools:
+      verilator:
+        mode : lint-only
+    toplevel : blake2s
+
+  sky130:
+    default_tool: openlane
+    filesets: [rtl, openlane]
+    toplevel: blake2s
+
+  tb_blake2s : &tb
+    default_tool: icarus
+    filesets: [rtl, tb]
+    toplevel : tb_blake2s
+
+  tb_aes_key_mem:
+    <<: *tb
+    toplevel : tb_aes_key_mem
+
+  tb_blake2s_core:
+    <<: *tb
+    toplevel : tb_blake2s_core
