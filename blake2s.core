@@ -5,11 +5,11 @@ name : secworks:crypto:blake2s:0
 filesets:
   rtl:
     files:
-      - srt/rtlblake2s.v
-      - srt/rtlblake2s_core.v
-      - srt/rtlblake2s_m_select.v
-      - srt/rtlblake2s_round.v
-      - srt/rtlblake2s_G.v
+      - src/rtl/blake2s.v
+      - src/rtl/blake2s_core.v
+      - src/rtl/blake2s_m_select.v
+      - src/rtl/blake2s_round.v
+      - src/rtl/blake2s_G.v
     file_type : verilogSource
 
   tb:
