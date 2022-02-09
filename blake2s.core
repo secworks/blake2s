@@ -14,10 +14,10 @@ filesets:
 
   tb:
     files:
-      - src/rtl/tb_blake2s_G.v
-      - src/rtl/tb_blake2s_core.v
-      - src/rtl/tb_blake2s_m_select.v
-      - src/rtl/tb_blake2s_round.v
+      - src/tb/tb_blake2s_G.v
+      - src/tb/tb_blake2s_core.v
+      - src/tb/tb_blake2s_m_select.v
+      - src/tb/tb_blake2s_round.v
     file_type : verilogSource
 
   openlane: {files : [data/sky130.tcl : {file_type : tclSource}]}
