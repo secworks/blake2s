@@ -39,15 +39,18 @@
 
 # Sources.
 GF_SRC = ../src/rtl/blake2s_G.v
-M_SELECT_SRC = ../src/rtl/blake2s_m_select.v
-ROUND_SRC =  ../src/rtl/blake2s_round.v
-CORE_SRC = ../src/rtl/blake2s_core.v $(M_SELECT_SRC) $(ROUND_SRC) $(GF_SRC)
-TOP_SRC= ../src/rtl/blake2s.v $(CORE_SRC)
-
 TB_GF_SRC = ../src/tb/tb_blake2s_G.v
+
+M_SELECT_SRC = ../src/rtl/blake2s_m_select.v
 TB_M_SELECT_SRC = ../src/tb/tb_blake2s_m_select.v
+
+ROUND_SRC =  ../src/rtl/blake2s_round.v
 TB_ROUND_SRC = ../src/tb/tb_blake2s_round.v
+
+CORE_SRC = ../src/rtl/blake2s_core.v $(M_SELECT_SRC) $(ROUND_SRC) $(GF_SRC)
 TB_CORE_SRC = ../src/tb/tb_blake2s_core.v
+
+TOP_SRC= ../src/rtl/blake2s.v $(CORE_SRC)
 TB_TOP_SRC = ../src/tb/tb_blake2s.v
 
 
@@ -63,27 +66,27 @@ all: gf.sim m.sim round.sim core.sim top.sim
 
 
 gf.sim:  $(TB_GF_SRC) $(GF_SRC)
-	$(CC) $(CC_FLAGS) -o gf.sim $(TB_GF_SRC) $(GF_SRC)
+	$(CC) $(CC_FLAGS) -o  $@ $^
 
 
 m.sim:  $(TB_M_SELECT_SRC) $(M_SELECT_SRC)
-	$(CC) $(CC_FLAGS) -o m.sim $(TB_M_SELECT_SRC) $(M_SELECT_SRC)
+	$(CC) $(CC_FLAGS) -o  $@ $^
 
 
 round.sim:  $(TB_ROUND_SRC) $(ROUND_SRC)
-	$(CC) $(CC_FLAGS) -o round.sim $(TB_ROUND_SRC) $(ROUND_SRC)
+	$(CC) $(CC_FLAGS) -o round.sim  $@ $^
 
 
 core.sim:  $(TB_CORE_SRC) $(CORE_SRC)
-	$(CC) $(CC_FLAGS) -o core.sim $(TB_CORE_SRC) $(CORE_SRC)
+	$(CC) $(CC_FLAGS) -o core.sim  $@ $^
 
 
 top.sim:  $(TOP_SRC)
-	$(CC) $(CC_FLAGS) -o top.sim $(TOP_SRC)
+	$(CC) $(CC_FLAGS) -o  $@ $^
 
 
 lint: $(TOP_SRC)
-	$(LINT) $(LINT_FLAGS) $(TOP_SRC)
+	$(LINT) $(LINT_FLAGS)  $^
 
 
 clean:
