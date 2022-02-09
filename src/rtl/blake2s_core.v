@@ -237,7 +237,7 @@ module blake2s_core(
                            .reset_n(reset_n),
                            .load(load_m),
                            .m(block),
-                           .r(round_ctr_reg),
+                           .round(round_ctr_reg),
                            .mode(G_mode_reg),
                            .G0_m0(G0_m0),
                            .G0_m1(G0_m1),

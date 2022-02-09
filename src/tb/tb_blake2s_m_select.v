@@ -58,7 +58,7 @@ module tb_blake2s_m_select();
   reg            tb_reset_n;
   reg            tb_load;
   reg  [511 : 0] tb_m;
-  reg  [3 : 0]   tb_r;
+  reg  [3 : 0]   tb_round;
   reg            tb_mode;
   wire [31 : 0]  tb_G0_m0;
   wire [31 : 0]  tb_G0_m1;
@@ -80,7 +80,7 @@ module tb_blake2s_m_select();
                        .reset_n(tb_reset_n),
                        .load(tb_load),
                        .m(tb_m),
-                       .r(tb_r),
+                       .round(tb_round),
                        .mode(tb_mode),
                        .G0_m0(tb_G0_m0),
                        .G0_m1(tb_G0_m1),
@@ -138,8 +138,9 @@ module tb_blake2s_m_select();
           $display("0x%08x 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x ",
                    dut.m_mem[0], dut.m_mem[1], dut.m_mem[2], dut.m_mem[3],
                    dut.m_mem[4], dut.m_mem[5], dut.m_mem[6], dut.m_mem[7]);
+
           $display("0x%08x 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x 0x%08x ",
-                   dut.m_mem[8], dut.m_mem[9], dut.m_mem[10], dut.m_mem[11],
+                   dut.m_mem[8],  dut.m_mem[9],  dut.m_mem[10], dut.m_mem[11],
                    dut.m_mem[12], dut.m_mem[13], dut.m_mem[14], dut.m_mem[15]);
           $display("");
         end
@@ -154,10 +155,10 @@ module tb_blake2s_m_select();
   //----------------------------------------------------------------
   task display_test_result;
     begin
-      $display("--- %02d test cases executed ---*", tc_ctr);
+      $display("--- %02d test cases executed ---", tc_ctr);
       if (error_ctr == 0)
         begin
-          $display("--- All %02d test cases completed successfully ---*", tc_ctr);
+          $display("--- All %02d test cases completed successfully ---", tc_ctr);
         end
       else
         begin
@@ -176,15 +177,15 @@ module tb_blake2s_m_select();
     begin
       cycle_ctr  = 0;
       error_ctr  = 0;
+      display_cycle_ctr = 0;
+
       tc_ctr     = 0;
       tb_clk     = 0;
       tb_reset_n = 1;
       tb_load    = 0;
       tb_m       = 512'h0;
-      tb_r       = 0;
+      tb_round   = 0;
       tb_mode    = 0;
-
-      display_cycle_ctr = 0;
     end
   endtask // init_dut
 
@@ -198,15 +199,15 @@ module tb_blake2s_m_select();
     begin : tc_reset
       tc_ctr = tc_ctr + 1;
 
-      $display("--- Testing that reset clears the m memory ---*");
-      $display("--- Memory before reset: ---*");
+      $display("--- Testing that reset clears the m memory");
+      $display("--- Memory before reset:");
       dump_dut_state();
       tb_reset_n = 0;
       #(CLK_PERIOD);
-      $display("--- Pulling reset ---*");
+      $display("--- Pulling reset");
       tb_reset_n = 1;
       #(CLK_PERIOD);
-      $display("--- Memory after reset: ---*");
+      $display("--- Memory after reset:");
       dump_dut_state();
       $display("");
     end
@@ -221,12 +222,44 @@ module tb_blake2s_m_select();
   //----------------------------------------------------------------
   task test_case1;
     begin : tc1
-      integer tc1_error;
-      tc1_error = 0;
-      tc_ctr    = tc_ctr + 1;
+      tc_ctr  = tc_ctr + 1;
 
-      tb_r    = 0;
-      tb_mode = 0;
+      tb_round = 0;
+      tb_mode  = 0;
+      tb_load  = 0;
+      tb_m     = {32'h00010203, 32'h04050607, 32'h08090a0b, 32'h0c0d0e0f,
+                  32'h10111213, 32'h14151617, 32'h18191a1b, 32'h1c1d1e1f,
+                  32'h20212223, 32'h24252627, 32'h28292a2b, 32'h2c2d2e2f,
+                  32'h30313233, 32'h34353637, 32'h38393a3b, 32'h3c3d3e3f};
+
+      $display("--- TC1: Test case 1 started. Loading the m with a known block");
+      $display("--- TC1: Before loading:");
+      dump_dut_state();
+
+      tb_load = 1;
+      #(CLK_PERIOD);
+      tb_load = 0;
+      $display("--- TC1: After loading:");
+      dump_dut_state();
+
+      $display("");
+    end
+  endtask // test_case1
+
+
+  //----------------------------------------------------------------
+  // test_case2
+  //
+  // Check that we can get expected words based on rounds and mode.
+  //----------------------------------------------------------------
+  task test_case2;
+    begin : tc2
+      integer i;
+
+      tc_ctr  = tc_ctr + 1;
+
+      tb_round = 0;
+      tb_mode  = 0;
 
       tb_load = 0;
       tb_m    = {32'h00010203, 32'h04050607, 32'h08090a0b, 32'h0c0d0e0f,
@@ -234,16 +267,35 @@ module tb_blake2s_m_select();
                  32'h20212223, 32'h24252627, 32'h28292a2b, 32'h2c2d2e2f,
                  32'h30313233, 32'h34353637, 32'h38393a3b, 32'h3c3d3e3f};
 
-      $display("--- Running test case 1. Loading the m with a known block ---*");
-      $display("--- Before loading: ---*");
-      dump_dut_state();
-
+      $display("--- TC2: Test case 2 started. Loading the m with a known block");
       tb_load = 1;
-      #(CLK_PERIOD * 2);
+      #(CLK_PERIOD);
       tb_load = 0;
-      $display("--- Before loading: ---*");
-      dump_dut_state();
 
+      $display("--- TC2: Looping over all rounds and modes.");
+      for (i = 0 ; i < 16 ; i = i + 1) begin
+        tb_round = i[3 : 0];
+        tb_mode  = 0;
+        #(CLK_PERIOD);
+        $display("--- TC2: round %2d, mode: %1x:", tb_round, tb_mode);
+        $display("--- G0_m0: 0x%08x, G0_m1: 0x%08x, G1_m0: 0x%08x, G1_m1: 0x%08x",
+                 tb_G0_m0, tb_G0_m1, tb_G1_m0, tb_G1_m1);
+        $display("--- G2_m0: 0x%08x, G2_m1: 0x%08x, G3_m0: 0x%08x, G3_m1: 0x%08x",
+                 tb_G2_m0, tb_G2_m1, tb_G3_m0, tb_G3_m1);
+        #(CLK_PERIOD);
+
+        tb_mode  = 1;
+        #(CLK_PERIOD);
+        $display("--- TC2: round %2d, mode: %1x:", tb_round, tb_mode);
+        $display("--- G0_m0: 0x%08x, G0_m1: 0x%08x, G1_m0: 0x%08x, G1_m1: 0x%08x",
+                 tb_G0_m0, tb_G0_m1, tb_G1_m0, tb_G1_m1);
+        $display("--- G2_m0: 0x%08x, G2_m1: 0x%08x, G3_m0: 0x%08x, G3_m1: 0x%08x",
+                 tb_G2_m0, tb_G2_m1, tb_G3_m0, tb_G3_m1);
+        #(CLK_PERIOD);
+      end
+
+      $display("--- TC2: Test case 2 completed");
+      tb_load = 1;
       $display("");
     end
   endtask // test_case1
@@ -263,6 +315,7 @@ module tb_blake2s_m_select();
       init_dut();
       test_reset();
       test_case1();
+      test_case2();
 
       display_test_result();
       $display("--- Testbench for Blake2 m select module completed ---");
