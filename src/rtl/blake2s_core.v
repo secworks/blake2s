@@ -60,34 +60,34 @@ module blake2s_core(
   // Section 2.5 in https://tools.ietf.org/html/rfc7693
   //----------------------------------------------------------------
   // The digest length in bytes. Minimum: 1, Maximum: 32
-  parameter [7 : 0] DIGEST_LENGTH = 8'd32;
+  localparam [7 : 0] DIGEST_LENGTH = 8'd32;
 
   // The key length in bytes. Minimum: 0 (for no key used), Maximum: 32
-  parameter [7 : 0] KEY_LENGTH = 8'd0;
+  localparam [7 : 0] KEY_LENGTH = 8'd0;
 
   // Fanout.
-  parameter [7 : 0] FANOUT = 8'd1;
+  localparam [7 : 0] FANOUT = 8'd1;
 
   // Depth (maximal)
-  parameter [7 : 0] DEPTH = 8'd01;
+  localparam [7 : 0] DEPTH = 8'd01;
 
   // 4-byte leaf length
-  parameter [31 : 0] LEAF_LENGTH = 32'd0;
+  localparam [31 : 0] LEAF_LENGTH = 32'd0;
 
   // 8-byte node offset
-  parameter [47 : 0] NODE_OFFSET = 48'd0;
+  localparam [47 : 0] NODE_OFFSET = 48'd0;
 
   // Node Depth
-  parameter [7 : 0] NODE_DEPTH = 8'd0;
+  localparam [7 : 0] NODE_DEPTH = 8'd0;
 
   // Inner hash length
-  parameter [7 : 0] INNER_LENGTH = 8'd0;
+  localparam [7 : 0] INNER_LENGTH = 8'd0;
 
   // 16-byte salt, little-endian byte order
-  parameter [63 : 0] SALT = 64'h0;
+  localparam [63 : 0] SALT = 64'h0;
 
   // 16-byte personalization, little-endian byte order
-  parameter [63 : 0] PERSONALIZATION = 64'h0;
+  localparam [63 : 0] PERSONALIZATION = 64'h0;
 
   wire [255 : 0] parameter_block = {PERSONALIZATION, SALT, INNER_LENGTH,
                                     NODE_DEPTH, NODE_OFFSET, LEAF_LENGTH, DEPTH,
@@ -166,13 +166,13 @@ module blake2s_core(
   reg [31 : 0] f1_new;
   reg          f1_we;
 
-  reg  ready_reg;
-  reg  ready_new;
-  reg  ready_we;
+  reg          ready_reg;
+  reg          ready_new;
+  reg          ready_we;
 
-  reg [2 : 0] blake2s_ctrl_reg;
-  reg [2 : 0] blake2s_ctrl_new;
-  reg         blake2s_ctrl_we;
+  reg [2 : 0]  blake2s_ctrl_reg;
+  reg [2 : 0]  blake2s_ctrl_new;
+  reg          blake2s_ctrl_we;
 
 
   //----------------------------------------------------------------
@@ -348,7 +348,7 @@ module blake2s_core(
           f1_reg           <= 32'h0;
           ready_reg        <= 1'h1;
           G_mode_reg       <= G_ROW;
-          round_ctr_reg       <= 4'h0;
+          round_ctr_reg    <= 4'h0;
           blake2s_ctrl_reg <= CTRL_IDLE;
         end
       else
@@ -415,7 +415,7 @@ module blake2s_core(
           h_new[5] = IV5 ^ parameter_block[191:160];
           h_new[6] = IV6 ^ parameter_block[223:192];
           h_new[7] = IV7 ^ parameter_block[255:224];
-          h_we = 1;
+          h_we     = 1;
         end
 
       if (update_state)
@@ -428,7 +428,7 @@ module blake2s_core(
           h_new[5] = h_reg[5] ^ v_reg[5] ^ v_reg[13];
           h_new[6] = h_reg[6] ^ v_reg[6] ^ v_reg[14];
           h_new[7] = h_reg[7] ^ v_reg[7] ^ v_reg[15];
-          h_we = 1;
+          h_we     = 1;
         end
     end // state_logic
 
@@ -656,11 +656,10 @@ module blake2s_core(
 
 
   //----------------------------------------------------------------
-  // blake2s_ctrl_fsm
-  // Logic for the state machine controlling the core behaviour.
+  // blake2s_ctrl
   //----------------------------------------------------------------
   always @*
-    begin : blake2s_ctrl_fsm
+    begin : blake2s_ctrl
       init_state         = 1'h0;
       update_state       = 1'h0;
       init_v             = 1'h0;
@@ -753,7 +752,7 @@ module blake2s_core(
           begin
           end
       endcase // case (blake2s_ctrl_reg)
-    end // blake2s_ctrl_fsm
+    end // blake2s_ctrl
 endmodule // blake2s_core
 
 //======================================================================
