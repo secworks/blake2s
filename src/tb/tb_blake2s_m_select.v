@@ -154,14 +154,14 @@ module tb_blake2s_m_select();
   //----------------------------------------------------------------
   task display_test_result;
     begin
-      $display("*** %02d test cases executed ****", tc_ctr);
+      $display("--- %02d test cases executed ---*", tc_ctr);
       if (error_ctr == 0)
         begin
-          $display("*** All %02d test cases completed successfully ****", tc_ctr);
+          $display("--- All %02d test cases completed successfully ---*", tc_ctr);
         end
       else
         begin
-          $display("*** %02d test cases did not complete successfully. ***", error_ctr);
+          $display("--- %02d test cases did not complete successfully. ---", error_ctr);
         end
     end
   endtask // display_test_result
@@ -198,15 +198,15 @@ module tb_blake2s_m_select();
     begin : tc_reset
       tc_ctr = tc_ctr + 1;
 
-      $display("*** Testing that reset clears the m memory ****");
-      $display("*** Memory before reset: ****");
+      $display("--- Testing that reset clears the m memory ---*");
+      $display("--- Memory before reset: ---*");
       dump_dut_state();
       tb_reset_n = 0;
       #(CLK_PERIOD);
-      $display("*** Pulling reset ****");
+      $display("--- Pulling reset ---*");
       tb_reset_n = 1;
       #(CLK_PERIOD);
-      $display("*** Memory after reset: ****");
+      $display("--- Memory after reset: ---*");
       dump_dut_state();
       $display("");
     end
@@ -234,14 +234,14 @@ module tb_blake2s_m_select();
                  32'h20212223, 32'h24252627, 32'h28292a2b, 32'h2c2d2e2f,
                  32'h30313233, 32'h34353637, 32'h38393a3b, 32'h3c3d3e3f};
 
-      $display("*** Running test case 1. Loading the m with a known block ****");
-      $display("*** Before loading: ****");
+      $display("--- Running test case 1. Loading the m with a known block ---*");
+      $display("--- Before loading: ---*");
       dump_dut_state();
 
       tb_load = 1;
       #(CLK_PERIOD * 2);
       tb_load = 0;
-      $display("*** Before loading: ****");
+      $display("--- Before loading: ---*");
       dump_dut_state();
 
       $display("");
@@ -256,7 +256,7 @@ module tb_blake2s_m_select();
   //----------------------------------------------------------------
   initial
     begin : testrunner
-      $display("*** Testbench for Blake2 m select module started ***");
+      $display("--- Testbench for Blake2 m select module started ---");
       $display("----------------------------------------------------");
       $display("");
 
@@ -265,8 +265,8 @@ module tb_blake2s_m_select();
       test_case1();
 
       display_test_result();
-      $display("*** Blake2 m select simulation done  ****");
-      $display("-----------------------------------------");
+      $display("--- Testbench for Blake2 m select module completed ---");
+      $display("------------------------------------------------------");
       $finish_and_return(error_ctr);
     end // testrunner
 
