@@ -84,14 +84,13 @@ int blake2s_selftest() {
 //------------------------------------------------------------------
 void print_message(uint8_t *m, int mlen) {
   printf("The message:\n");
-  for (int i = 0 ; i < mlen ; i++) {
-      printf("0x%02x ", m[i]);
-      if ((i > 0) && (!i % 8)) {
-        printf("\n");
-      }
+  for (int i = 1 ; i <= mlen ; i++) {
+    printf("0x%02x ", m[(i - 1)]);
+    if (i % 8 == 0) {
+      printf("\n");
+    }
   }
-        printf("\n");
-
+  printf("\n");
 }
 
 
@@ -143,6 +142,51 @@ void test_abc_message() {
 
 
 //------------------------------------------------------------------
+// test_one_block_message()
+// Test with a 64 byte message, filling one block.
+//------------------------------------------------------------------
+void test_one_block_message() {
+
+  uint8_t md[32];
+  uint8_t msg[64];
+
+  for (uint8_t i = 0 ; i < 64 ; i++) {
+    msg[i] = i;
+  }
+
+  printf("Testing with 64 byte message.\n");
+  print_message(msg, 64);
+
+  blake2s(md, 32, NULL, 0, msg, 64);
+  print_digest(md);
+  printf("\n");
+}
+
+
+//------------------------------------------------------------------
+// test_one_block_one_byte_message()
+// Test with a 65 byte message, filling one block and a single
+// byte in the next block.
+//------------------------------------------------------------------
+void test_one_block_one_byte_message() {
+
+  uint8_t md[32];
+  uint8_t msg[65];
+
+  for (uint8_t i = 0 ; i < 65 ; i++) {
+    msg[i] = i;
+  }
+
+  printf("Testing with 65 byte message.\n");
+  print_message(msg, 65);
+
+  blake2s(md, 32, NULL, 0, msg, 65);
+  print_digest(md);
+  printf("\n");
+}
+
+
+//------------------------------------------------------------------
 // self_test
 // The original self test.
 //------------------------------------------------------------------
@@ -162,6 +206,8 @@ int main(void) {
 
   test_zero_length();
   test_abc_message();
+  test_one_block_message();
+  test_one_block_one_byte_message();
 
   return 0;
 }
