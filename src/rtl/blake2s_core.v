@@ -46,7 +46,7 @@ module blake2s_core(
                     input wire            finish,
 
                     input wire [511 : 0]  block,
-                    input wire [5 : 0]    blocklen,
+                    input wire [6 : 0]    blocklen,
 
                     output wire [255 : 0] digest,
                     output wire           ready
@@ -60,44 +60,27 @@ module blake2s_core(
   // Section 2.5 in https://tools.ietf.org/html/rfc7693
   //----------------------------------------------------------------
   // The digest length in bytes. Minimum: 1, Maximum: 32
-  localparam [7 : 0] DIGEST_LENGTH = 8'd32;
-
-  // The key length in bytes. Minimum: 0 (for no key used), Maximum: 32
-  localparam [7 : 0] KEY_LENGTH = 8'd0;
-
-  // Fanout.
-  localparam [7 : 0] FANOUT = 8'd1;
-
-  // Depth (maximal)
-  localparam [7 : 0] DEPTH = 8'd01;
-
-  // 4-byte leaf length
-  localparam [31 : 0] LEAF_LENGTH = 32'd0;
-
-  // 8-byte node offset
-  localparam [47 : 0] NODE_OFFSET = 48'd0;
-
-  // Node Depth
-  localparam [7 : 0] NODE_DEPTH = 8'd0;
-
-  // Inner hash length
-  localparam [7 : 0] INNER_LENGTH = 8'd0;
-
-  // 16-byte salt, little-endian byte order
-  localparam [63 : 0] SALT = 64'h0;
-
-  // 16-byte personalization, little-endian byte order
+  localparam [7 : 0]  DIGEST_LENGTH   = 8'd32;
+  localparam [7 : 0]  KEY_LENGTH      = 8'd0;
+  localparam [7 : 0]  FANOUT          = 8'd1;
+  localparam [7 : 0]  DEPTH           = 8'd01;
+  localparam [31 : 0] LEAF_LENGTH     = 32'd0;
+  localparam [47 : 0] NODE_OFFSET     = 48'd0;
+  localparam [7 : 0]  NODE_DEPTH      = 8'd0;
+  localparam [7 : 0]  INNER_LENGTH    = 8'd0;
+  localparam [63 : 0] SALT            = 64'h0;
   localparam [63 : 0] PERSONALIZATION = 64'h0;
 
   wire [255 : 0] parameter_block = {PERSONALIZATION, SALT, INNER_LENGTH,
-                                    NODE_DEPTH, NODE_OFFSET, LEAF_LENGTH, DEPTH,
-                                    FANOUT, KEY_LENGTH, DIGEST_LENGTH};
+                                    NODE_DEPTH, NODE_OFFSET, LEAF_LENGTH,
+                                    DEPTH, FANOUT, KEY_LENGTH, DIGEST_LENGTH};
 
 
   //----------------------------------------------------------------
   // Internal constant definitions.
   //----------------------------------------------------------------
-  localparam NUM_ROUNDS = 10;
+  localparam NUM_ROUNDS  = 10;
+  localparam BLOCK_BYTES = 7'd64;
 
   // G function modes.
   localparam G_ROW      = 1'h0;
@@ -120,8 +103,6 @@ module blake2s_core(
   localparam CTRL_COMP_DONE  = 3'h3;
   localparam CTRL_FINISH     = 3'h4;
 
-
-  localparam BLAKE2S_BLOCKBYTES = 32'd64;
 
 
   //----------------------------------------------------------------
@@ -440,7 +421,7 @@ module blake2s_core(
     begin : compress_logic
       integer i;
 
-      f0_new = 32'h0;;
+      f0_new = 32'h0;
 
       for (i = 0; i < 16; i = i + 1)
         v_new[i] = 32'h0;
@@ -631,27 +612,29 @@ module blake2s_core(
       t1_new = 32'h0;
       t1_we  = 1'h1;
 
-      if (t_ctr_rst)
-        begin
-          t0_we = 1'h1;
-          t1_we = 1'h1;
+      if (t_ctr_rst) begin
+        t0_new = 32'h0;
+        t0_we  = 1'h1;
+        t1_new = 32'h0;
+        t1_we  = 1'h1;
+      end
+
+      if (t_ctr_inc) begin
+        t0_we = 1'h1;
+        t1_we = 1'h1;
+
+        if (fix_final_block) begin
+          t0_new = t0_reg + blocklen;
+        end else begin
+          t0_new = t0_reg + BLOCK_BYTES;
         end
 
-      if (t_ctr_inc)
-        begin
-          t0_we = 1'h1;
-          t1_we = 1'h1;
-
-          if (fix_final_block)
-            t0_new = t0_reg + blocklen;
-          else
-            t0_new = t0_reg + BLAKE2S_BLOCKBYTES;
-
-          if (t0_new < t0_reg)
+        if (t0_new < t0_reg) begin
             t1_new = t1_reg + 1'h1;
-          else
-            t1_new = t1_reg + 1'h1;
+        end else begin
+          t1_new = t1_reg + 1'h1;
         end
+      end
     end // t_ctr
 
 
@@ -682,75 +665,75 @@ module blake2s_core(
 
 
       case (blake2s_ctrl_reg)
-        CTRL_IDLE:
-          begin
-            if (init)
-              begin
-                init_state = 1'h1;
-              end
-
-            if (next)
-              begin
-                ready_new        = 1'h0;
-                ready_we         = 1'h1;
-                init_v           = 1'h1;
-                load_m           = 1'h1;
-                G_mode_rst       = 1'h1;
-                round_ctr_rst    = 1'h1;
-                blake2s_ctrl_new = CTRL_G_ROW;
-                blake2s_ctrl_we  = 1'h1;
-              end
+        CTRL_IDLE: begin
+          if (init) begin
+            init_state = 1'h1;
           end
 
-
-        CTRL_G_ROW:
-          begin
-            update_v         = 1'h1;
-            blake2s_ctrl_new = CTRL_G_DIAGONAL;
-            blake2s_ctrl_we  = 1'h1;
-          end
-
-
-        CTRL_G_DIAGONAL:
-          begin
-            update_v         = 1'h1;
-            round_ctr_inc    = 1'h1;
-            if (round_ctr_reg == (NUM_ROUNDS - 1))
-              begin
-                blake2s_ctrl_new = CTRL_COMP_DONE;
-                blake2s_ctrl_we  = 1'h1;
-              end
-            else
-              begin
-                blake2s_ctrl_new = CTRL_G_ROW;
-                blake2s_ctrl_we  = 1'h1;
-              end
-          end
-
-
-        CTRL_COMP_DONE:
-          begin
-            update_state     = 1'h1;
-            ready_new        = 1'h1;
+          if (next) begin
+            ready_new        = 1'h0;
             ready_we         = 1'h1;
-            blake2s_ctrl_new = CTRL_IDLE;
+            init_v           = 1'h1;
+            load_m           = 1'h1;
+            G_mode_rst       = 1'h1;
+            round_ctr_rst    = 1'h1;
+            blake2s_ctrl_new = CTRL_G_ROW;
             blake2s_ctrl_we  = 1'h1;
           end
 
-
-        CTRL_FINISH:
-          begin
-            update_chain_value = 1'h1;
-            ready_new          = 1'h1;
-            ready_we           = 1'h1;
-            blake2s_ctrl_new   = CTRL_IDLE;
-            blake2s_ctrl_we    = 1'h1;
+          if (finish) begin
+            ready_new        = 1'h0;
+            ready_we         = 1'h1;
+            init_v           = 1'h1;
+            load_m           = 1'h1;
+            G_mode_rst       = 1'h1;
+            round_ctr_rst    = 1'h1;
+            blake2s_ctrl_new = CTRL_FINISH;
+            blake2s_ctrl_we  = 1'h1;
           end
+        end
 
 
-        default:
-          begin
+        CTRL_G_ROW: begin
+          update_v         = 1'h1;
+          blake2s_ctrl_new = CTRL_G_DIAGONAL;
+          blake2s_ctrl_we  = 1'h1;
+        end
+
+
+        CTRL_G_DIAGONAL: begin
+          update_v         = 1'h1;
+          round_ctr_inc    = 1'h1;
+          if (round_ctr_reg == (NUM_ROUNDS - 1)) begin
+            blake2s_ctrl_new = CTRL_COMP_DONE;
+            blake2s_ctrl_we  = 1'h1;
           end
+          else begin
+            blake2s_ctrl_new = CTRL_G_ROW;
+            blake2s_ctrl_we  = 1'h1;
+          end
+        end
+
+
+        CTRL_COMP_DONE: begin
+          update_state     = 1'h1;
+          ready_new        = 1'h1;
+          ready_we         = 1'h1;
+          blake2s_ctrl_new = CTRL_IDLE;
+          blake2s_ctrl_we  = 1'h1;
+        end
+
+
+        CTRL_FINISH: begin
+          update_chain_value = 1'h1;
+          ready_new          = 1'h1;
+          ready_we           = 1'h1;
+          blake2s_ctrl_new   = CTRL_IDLE;
+          blake2s_ctrl_we    = 1'h1;
+        end
+
+
+        default: begin end
       endcase // case (blake2s_ctrl_reg)
     end // blake2s_ctrl
 endmodule // blake2s_core

@@ -86,7 +86,7 @@ module blake2s(
   reg          next_new;
   reg          finish_reg;
   reg          finish_new;
-  reg [5 : 0]  blocklen_reg;
+  reg [6 : 0]  blocklen_reg;
   reg          blocklen_we;
 
   reg [31 : 0] block_mem [0 : 15];
@@ -148,7 +148,7 @@ module blake2s(
           init_reg     <= 1'h0;
           next_reg     <= 1'h0;
           finish_reg   <= 1'h0;
-          blocklen_reg <= 6'h0;
+          blocklen_reg <= 7'h0;
         end
       else
         begin
@@ -157,7 +157,7 @@ module blake2s(
           finish_reg <= finish_new;
 
           if (blocklen_we)
-            blocklen_reg <= write_data[5 : 0];
+            blocklen_reg <= write_data[6 : 0];
 
           if (block_mem_we)
             block_mem[address[3 : 0]] <= write_data;
