@@ -143,6 +143,9 @@ static void blake2s_compress(blake2s_ctx *ctx, int last)
         m[i] = B2S_GET32(&ctx->b[4 * i]);
     }
 
+    printf("v before G processing:\n");
+    print_v(&v[0]);
+
     // Ten rounds of the G function applied on rows, diagonal.
     for (i = 0; i < 10; i++) {
       printf("Round %02d:\n", (i + 1));
@@ -156,6 +159,9 @@ static void blake2s_compress(blake2s_ctx *ctx, int last)
       G(&v[0], 2, 7,  8, 13, m[sigma[i][12]], m[sigma[i][13]]);
       G(&v[0], 3, 4,  9, 14, m[sigma[i][14]], m[sigma[i][15]]);
     }
+
+    printf("v after G processing:\n");
+    print_v(&v[0]);
 
     // Update the hash state.
     for (i = 0; i < 8; ++i) {
