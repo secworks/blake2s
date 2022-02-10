@@ -12,6 +12,7 @@
 *.log
 *.txt
 test_*
+/src/model/logs
 
 ## Subdirs in toolruns for vendor tools
 /toolruns/quartus
