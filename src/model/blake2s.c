@@ -51,7 +51,7 @@ void print_v(uint32_t *v) {
 //------------------------------------------------------------------
 void print_ctx(blake2s_ctx *ctx) {
   printf("Chained state (h):\n");
-  printf("0x%08x, 0x%08x, 0x%08x, 0x%08x",
+  printf("0x%08x, 0x%08x, 0x%08x, 0x%08x, ",
          ctx->h[0], ctx->h[1], ctx->h[2], ctx->h[3]);
   printf("0x%08x, 0x%08x, 0x%08x, 0x%08x",
          ctx->h[4], ctx->h[5], ctx->h[6], ctx->h[7]);
