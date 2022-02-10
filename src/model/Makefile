@@ -47,6 +47,6 @@ blake2s_test:	$(SRC) $(INC)
 
 
 clean:
-	rm blake2s_test
-	rm *.log
-	rm *.txt
+	rm -f ./blake2s_test
+	rm -f *.log
+	rm -f *.txt
