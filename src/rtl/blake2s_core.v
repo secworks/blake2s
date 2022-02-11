@@ -101,7 +101,7 @@ module blake2s_core(
   localparam CTRL_G_ROW      = 3'h1;
   localparam CTRL_G_DIAGONAL = 3'h2;
   localparam CTRL_COMP_DONE  = 3'h3;
-
+  localparam CTRL_FINISH     = 3'h4;
 
 
   //----------------------------------------------------------------
@@ -685,29 +685,35 @@ module blake2s_core(
       case (blake2s_ctrl_reg)
         CTRL_IDLE: begin
           if (init) begin
-            init_state = 1'h1;
+            init_state       = 1'h1;
+            ready_new        = 1'h0;
+            ready_we         = 1'h1;
+            blake2s_ctrl_new = CTRL_G_ROW;
+            blake2s_ctrl_we  = 1'h1;
           end
 
           if (update) begin
-            ready_new        = 1'h0;
-            ready_we         = 1'h1;
-            init_v           = 1'h1;
-            load_m           = 1'h1;
-            G_mode_rst       = 1'h1;
-            round_ctr_rst    = 1'h1;
-            blake2s_ctrl_new = CTRL_G_ROW;
-            blake2s_ctrl_we  = 1'h1;
+            if (blocklen == BLOCK_BYTES) begin
+              init_v           = 1'h1;
+              load_m           = 1'h1;
+              G_mode_rst       = 1'h1;
+              round_ctr_rst    = 1'h1;
+              ready_new        = 1'h0;
+              ready_we         = 1'h1;
+              blake2s_ctrl_new = CTRL_G_ROW;
+              blake2s_ctrl_we  = 1'h1;
+            end
           end
 
           if (finish) begin
             last_new         = 1'h1;
             last_we          = 1'h1;
-            ready_new        = 1'h0;
-            ready_we         = 1'h1;
             init_v           = 1'h1;
             load_m           = 1'h1;
             G_mode_rst       = 1'h1;
             round_ctr_rst    = 1'h1;
+            ready_new        = 1'h0;
+            ready_we         = 1'h1;
             blake2s_ctrl_new = CTRL_G_ROW;
             blake2s_ctrl_we  = 1'h1;
           end
@@ -740,20 +746,25 @@ module blake2s_core(
             // Generate digest. THIS CODE DOES NOT WORK.
             last_new           = 1'h0;
             last_we            = 1'h1;
-            ready_new          = 1'h1;
-            ready_we           = 1'h1;
-            blake2s_ctrl_new   = CTRL_IDLE;
+            blake2s_ctrl_new   = CTRL_FINISH;
             blake2s_ctrl_we    = 1'h1;
           end
           else begin
             update_chain_value = 1'h1;
             update_state       = 1'h1;
-            ready_new          = 1'h1;
-            ready_we           = 1'h1;
-            blake2s_ctrl_new   = CTRL_IDLE;
+            blake2s_ctrl_new   = CTRL_FINISH;
             blake2s_ctrl_we    = 1'h1;
           end
         end
+
+
+        CTRL_FINISH: begin
+          ready_new        = 1'h1;
+          ready_we         = 1'h1;
+          blake2s_ctrl_new = CTRL_IDLE;
+          blake2s_ctrl_we  = 1'h1;
+        end
+
 
         default: begin end
       endcase // case (blake2s_ctrl_reg)
