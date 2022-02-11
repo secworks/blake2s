@@ -42,7 +42,7 @@ module blake2s_core(
                     input wire            reset_n,
 
                     input wire            init,
-                    input wire            next,
+                    input wire            update,
                     input wire            finish,
 
                     input wire [511 : 0]  block,
@@ -670,7 +670,7 @@ module blake2s_core(
             init_state = 1'h1;
           end
 
-          if (next) begin
+          if (update) begin
             ready_new        = 1'h0;
             ready_we         = 1'h1;
             init_v           = 1'h1;

@@ -57,7 +57,7 @@ module blake2s(
 
   localparam ADDR_CTRL        = 8'h08;
   localparam CTRL_INIT_BIT    = 0;
-  localparam CTRL_NEXT_BIT    = 1;
+  localparam CTRL_UPDATE_BIT  = 1;
   localparam CTRL_FINISH_BIT  = 2;
 
   localparam ADDR_STATUS      = 8'h09;
@@ -82,8 +82,8 @@ module blake2s(
   //----------------------------------------------------------------
   reg          init_reg;
   reg          init_new;
-  reg          next_reg;
-  reg          next_new;
+  reg          update_reg;
+  reg          update_new;
   reg          finish_reg;
   reg          finish_new;
   reg [6 : 0]  blocklen_reg;
@@ -122,7 +122,7 @@ module blake2s(
                     .reset_n(reset_n),
 
                     .init(init_reg),
-                    .next(next_reg),
+                    .update(update_reg),
                     .finish(finish_reg),
 
                     .block(core_block),
@@ -146,14 +146,14 @@ module blake2s(
             block_mem[i] <= 32'h0;
 
           init_reg     <= 1'h0;
-          next_reg     <= 1'h0;
+          update_reg   <= 1'h0;
           finish_reg   <= 1'h0;
           blocklen_reg <= 7'h0;
         end
       else
         begin
           init_reg   <= init_new;
-          next_reg   <= next_new;
+          update_reg <= update_new;
           finish_reg <= finish_new;
 
           if (blocklen_we)
@@ -172,7 +172,7 @@ module blake2s(
   always @*
     begin : api
       init_new      = 1'h0;
-      next_new      = 1'h0;
+      update_new    = 1'h0;
       finish_new    = 1'h0;
       block_mem_we  = 1'h0;
       blocklen_we   = 1'h0;
@@ -185,7 +185,7 @@ module blake2s(
               if (address == ADDR_CTRL)
                 begin
                   init_new   = write_data[CTRL_INIT_BIT];
-                  next_new   = write_data[CTRL_NEXT_BIT];
+                  update_new = write_data[CTRL_UPDATE_BIT];
                   finish_new = write_data[CTRL_FINISH_BIT];
                 end
 
