@@ -156,8 +156,6 @@ module tb_blake2s_core();
       $display("t0_reg: 0x%08x, t0_new: 0x%08x", dut.t0_reg, dut.t0_new);
       $display("t1_reg: 0x%08x, t1_new: 0x%08x", dut.t1_reg, dut.t1_new);
       $display("");
-      $display("f0_reg: 0x%08x, f0_new: 0x%08x", dut.f0_reg, dut.f0_new);
-      $display("f1_reg: 0x%08x, f1_new: 0x%08x", dut.f1_reg, dut.f1_new);
       $display("-------------------------------------------------------------------------------------");
     end
   endtask // dump_dut_state

@@ -129,14 +129,6 @@ module blake2s_core(
   reg          round_ctr_inc;
   reg          round_ctr_rst;
 
-  reg [31 : 0] f0_reg;
-  reg [31 : 0] f0_new;
-  reg          f0_we;
-
-  reg [31 : 0] f1_reg;
-  reg [31 : 0] f1_new;
-  reg          f1_we;
-
   reg [31 : 0] t0_reg;
   reg [31 : 0] t0_new;
   reg          t0_we;
@@ -327,8 +319,6 @@ module blake2s_core(
           v_reg[i] <= 32'h0;
         end
 
-        f0_reg           <= 32'h0;
-        f1_reg           <= 32'h0;
         t0_reg           <= 32'h0;
         t1_reg           <= 32'h0;
         last_reg         <= 1'h0;
@@ -348,14 +338,6 @@ module blake2s_core(
           for (i = 0; i < 8; i = i + 1) begin
             v_reg[i] <= v_new[i];
           end
-        end
-
-        if (f0_we) begin
-          f0_reg <= f0_new;
-        end
-
-        if (f1_we) begin
-          f1_reg <= f1_new;
         end
 
         if (t0_we) begin
@@ -474,8 +456,8 @@ module blake2s_core(
           v_new[11] = IV3;
           v_new[12] = t0_reg ^ IV4;
           v_new[13] = t1_reg ^ IV5;
-          v_new[14] = f0_reg ^ IV6;
-          v_new[15] = f1_reg ^ IV7;
+          v_new[14] = IV6;
+          v_new[15] = IV7;
           v_we = 1;
         end
 
@@ -669,10 +651,6 @@ module blake2s_core(
       round_ctr_rst      = 1'h0;
       t_ctr_inc          = 1'h0;
       t_ctr_rst          = 1'h0;
-      f0_new             = 32'h0;
-      f0_we              = 1'h0;
-      f1_new             = 32'h0;
-      f1_we              = 1'h0;
       update_chain_value = 1'h0;
       last_new           = 1'h0;
       last_we            = 1'h0;
