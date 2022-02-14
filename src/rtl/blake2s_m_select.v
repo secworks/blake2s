@@ -159,7 +159,7 @@ module blake2s_m_select(
       i_G3_m0 = 4'd0;
       i_G3_m1 = 4'd0;
 
-      case ({mode, round})
+      case ({round, mode})
         0: begin
           i_G0_m0 = 4'd00;
           i_G0_m1 = 4'd01;
@@ -381,7 +381,7 @@ module blake2s_m_select(
         end
 
         default: begin end
-      endcase // case ({mode, round})
+      endcase // case ({round, mode})
     end
 
 endmodule // blake2s_m_select

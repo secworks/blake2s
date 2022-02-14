@@ -98,10 +98,11 @@ module blake2s_core(
 
   // Control FSM state names.
   localparam CTRL_IDLE       = 3'h0;
-  localparam CTRL_G_ROW      = 3'h1;
-  localparam CTRL_G_DIAGONAL = 3'h2;
-  localparam CTRL_COMP_DONE  = 3'h3;
-  localparam CTRL_FINISH     = 3'h4;
+  localparam CTRL_INIT_ROUND = 3'h1;
+  localparam CTRL_G_ROW      = 3'h2;
+  localparam CTRL_G_DIAGONAL = 3'h3;
+  localparam CTRL_COMP_DONE  = 3'h4;
+  localparam CTRL_FINISH     = 3'h5;
 
 
   //----------------------------------------------------------------
@@ -116,12 +117,6 @@ module blake2s_core(
   reg          v_we;
   reg          init_v;
   reg          update_v;
-
-  reg          G_mode_reg;
-  reg          G_mode_new;
-  reg          G_mode_we;
-  reg          G_mode_inc;
-  reg          G_mode_rst;
 
   reg [3 : 0]  round_ctr_reg;
   reg [3 : 0]  round_ctr_new;
@@ -157,8 +152,7 @@ module blake2s_core(
   reg init_state;
   reg update_state;
   reg load_m;
-  reg fix_final_block;
-  reg update_chain_value;
+  reg G_mode;
 
   reg  [31 : 0] G0_a;
   reg  [31 : 0] G0_b;
@@ -214,7 +208,7 @@ module blake2s_core(
                            .load(load_m),
                            .m(block),
                            .round(round_ctr_reg),
-                           .mode(G_mode_reg),
+                           .mode(G_mode),
                            .G0_m0(G0_m0),
                            .G0_m1(G0_m1),
                            .G1_m0(G1_m0),
@@ -287,14 +281,14 @@ module blake2s_core(
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
   // Note little to big endian conversion.
-  assign digest = {h_reg[0][7:0], h_reg[0][15:8], h_reg[0][23:16], h_reg[0][31:24],
-                   h_reg[1][7:0], h_reg[1][15:8], h_reg[1][23:16], h_reg[1][31:24],
-                   h_reg[2][7:0], h_reg[2][15:8], h_reg[2][23:16], h_reg[2][31:24],
-                   h_reg[3][7:0], h_reg[3][15:8], h_reg[3][23:16], h_reg[3][31:24],
-                   h_reg[4][7:0], h_reg[4][15:8], h_reg[4][23:16], h_reg[4][31:24],
-                   h_reg[5][7:0], h_reg[5][15:8], h_reg[5][23:16], h_reg[5][31:24],
-                   h_reg[6][7:0], h_reg[6][15:8], h_reg[6][23:16], h_reg[6][31:24],
-                   h_reg[7][7:0], h_reg[7][15:8], h_reg[7][23:16], h_reg[7][31:24]};
+  assign digest = {h_reg[0][7 : 0], h_reg[0][15 : 8], h_reg[0][23 : 16], h_reg[0][31 : 24],
+                   h_reg[1][7 : 0], h_reg[1][15 : 8], h_reg[1][23 : 16], h_reg[1][31 : 24],
+                   h_reg[2][7 : 0], h_reg[2][15 : 8], h_reg[2][23 : 16], h_reg[2][31 : 24],
+                   h_reg[3][7 : 0], h_reg[3][15 : 8], h_reg[3][23 : 16], h_reg[3][31 : 24],
+                   h_reg[4][7 : 0], h_reg[4][15 : 8], h_reg[4][23 : 16], h_reg[4][31 : 24],
+                   h_reg[5][7 : 0], h_reg[5][15 : 8], h_reg[5][23 : 16], h_reg[5][31 : 24],
+                   h_reg[6][7 : 0], h_reg[6][15 : 8], h_reg[6][23 : 16], h_reg[6][31 : 24],
+                   h_reg[7][7 : 0], h_reg[7][15 : 8], h_reg[7][23 : 16], h_reg[7][31 : 24]};
 
   assign ready = ready_reg;
 
@@ -323,7 +317,6 @@ module blake2s_core(
         t1_reg           <= 32'h0;
         last_reg         <= 1'h0;
         ready_reg        <= 1'h1;
-        G_mode_reg       <= G_ROW;
         round_ctr_reg    <= 4'h0;
         blake2s_ctrl_reg <= CTRL_IDLE;
       end
@@ -354,10 +347,6 @@ module blake2s_core(
 
         if (ready_we) begin
           ready_reg <= ready_new;
-        end
-
-        if (G_mode_we) begin
-          G_mode_reg <= G_mode_new;
         end
 
         if (round_ctr_we) begin
@@ -456,7 +445,13 @@ module blake2s_core(
           v_new[11] = IV3;
           v_new[12] = t0_reg ^ IV4;
           v_new[13] = t1_reg ^ IV5;
-          v_new[14] = IV6;
+
+          if (last_reg) begin
+            v_new[14] = ~IV6;
+          end else begin
+            v_new[14] = IV6;
+          end
+
           v_new[15] = IV7;
           v_we = 1;
         end
@@ -465,111 +460,84 @@ module blake2s_core(
         begin
           v_we = 1;
 
-          if (G_mode_reg == G_ROW)
-            begin
-              G0_a      = v_reg[0];
-              G0_b      = v_reg[4];
-              G0_c      = v_reg[8];
-              G0_d      = v_reg[12];
-              v_new[0]  = G0_a_prim;
-              v_new[4]  = G0_b_prim;
-              v_new[8]  = G0_c_prim;
-              v_new[12] = G0_d_prim;
+          if (G_mode == G_ROW) begin
+            // Row updates.
+            G0_a      = v_reg[0];
+            G0_b      = v_reg[4];
+            G0_c      = v_reg[8];
+            G0_d      = v_reg[12];
+            v_new[0]  = G0_a_prim;
+            v_new[4]  = G0_b_prim;
+            v_new[8]  = G0_c_prim;
+            v_new[12] = G0_d_prim;
 
-              G1_a      = v_reg[1];
-              G1_b      = v_reg[5];
-              G1_c      = v_reg[9];
-              G1_d      = v_reg[13];
-              v_new[1]  = G1_a_prim;
-              v_new[5]  = G1_b_prim;
-              v_new[9]  = G1_c_prim;
-              v_new[13] = G1_d_prim;
+            G1_a      = v_reg[1];
+            G1_b      = v_reg[5];
+            G1_c      = v_reg[9];
+            G1_d      = v_reg[13];
+            v_new[1]  = G1_a_prim;
+            v_new[5]  = G1_b_prim;
+            v_new[9]  = G1_c_prim;
+            v_new[13] = G1_d_prim;
 
-              G2_a      = v_reg[2];
-              G2_b      = v_reg[6];
-              G2_c      = v_reg[10];
-              G2_d      = v_reg[14];
-              v_new[2]  = G2_a_prim;
-              v_new[6]  = G2_b_prim;
-              v_new[10] = G2_c_prim;
-              v_new[14] = G2_d_prim;
+            G2_a      = v_reg[2];
+            G2_b      = v_reg[6];
+            G2_c      = v_reg[10];
+            G2_d      = v_reg[14];
+            v_new[2]  = G2_a_prim;
+            v_new[6]  = G2_b_prim;
+            v_new[10] = G2_c_prim;
+            v_new[14] = G2_d_prim;
 
-              G3_a      = v_reg[3];
-              G3_b      = v_reg[7];
-              G3_c      = v_reg[11];
-              G3_d      = v_reg[15];
-              v_new[3]  = G3_a_prim;
-              v_new[7]  = G3_b_prim;
-              v_new[11] = G3_c_prim;
-              v_new[15] = G3_d_prim;
-            end
+            G3_a      = v_reg[3];
+            G3_b      = v_reg[7];
+            G3_c      = v_reg[11];
+            G3_d      = v_reg[15];
+            v_new[3]  = G3_a_prim;
+            v_new[7]  = G3_b_prim;
+            v_new[11] = G3_c_prim;
+            v_new[15] = G3_d_prim;
+          end
+          else begin
+            // Diagonal updates.
+            G0_a      = v_reg[0];
+            G0_b      = v_reg[5];
+            G0_c      = v_reg[10];
+            G0_d      = v_reg[15];
+            v_new[0]  = G0_a_prim;
+            v_new[5]  = G0_b_prim;
+            v_new[10] = G0_c_prim;
+            v_new[15] = G0_d_prim;
 
-          else
-            begin
-              // Diagonal updates.
-              G0_a      = v_reg[0];
-              G0_b      = v_reg[5];
-              G0_c      = v_reg[10];
-              G0_d      = v_reg[15];
-              v_new[0]  = G0_a_prim;
-              v_new[5]  = G0_b_prim;
-              v_new[10] = G0_c_prim;
-              v_new[15] = G0_d_prim;
+            G1_a      = v_reg[1];
+            G1_b      = v_reg[6];
+            G1_c      = v_reg[11];
+            G1_d      = v_reg[12];
+            v_new[1]  = G1_a_prim;
+            v_new[6]  = G1_b_prim;
+            v_new[11] = G1_c_prim;
+            v_new[12] = G1_d_prim;
 
-              G1_a      = v_reg[1];
-              G1_b      = v_reg[6];
-              G1_c      = v_reg[11];
-              G1_d      = v_reg[12];
-              v_new[1]  = G1_a_prim;
-              v_new[6]  = G1_b_prim;
-              v_new[11] = G1_c_prim;
-              v_new[12] = G1_d_prim;
+            G2_a      = v_reg[2];
+            G2_b      = v_reg[7];
+            G2_c      = v_reg[8];
+            G2_d      = v_reg[13];
+            v_new[2]  = G2_a_prim;
+            v_new[7]  = G2_b_prim;
+            v_new[8]  = G2_c_prim;
+            v_new[13] = G2_d_prim;
 
-              G2_a      = v_reg[2];
-              G2_b      = v_reg[7];
-              G2_c      = v_reg[8];
-              G2_d      = v_reg[13];
-              v_new[2]  = G2_a_prim;
-              v_new[7]  = G2_b_prim;
-              v_new[8]  = G2_c_prim;
-              v_new[13] = G2_d_prim;
-
-              G3_a      = v_reg[3];
-              G3_b      = v_reg[4];
-              G3_c      = v_reg[9];
-              G3_d      = v_reg[14];
-              v_new[3]  = G3_a_prim;
-              v_new[4]  = G3_b_prim;
-              v_new[9]  = G3_c_prim;
-              v_new[14] = G3_d_prim;
-            end // else: !if(G_mode_reg == STATE_G0)
+            G3_a      = v_reg[3];
+            G3_b      = v_reg[4];
+            G3_c      = v_reg[9];
+            G3_d      = v_reg[14];
+            v_new[3]  = G3_a_prim;
+            v_new[4]  = G3_b_prim;
+            v_new[9]  = G3_c_prim;
+            v_new[14] = G3_d_prim;
+          end
         end // if (update_v)
     end // compress_logic
-
-
-  //----------------------------------------------------------------
-  // G_mode
-  // Update logic for the G mode. Basically a one bit
-  // counter that selects if we column of diaginal updates.
-  // increasing counter with reset.
-  //----------------------------------------------------------------
-  always @*
-    begin : G_mode
-      G_mode_new = G_ROW;
-      G_mode_we  = 1'h0;
-
-      if (G_mode_rst)
-        begin
-          G_mode_new = G_ROW;
-          G_mode_we  = 1;
-        end
-
-      if (G_mode_inc)
-        begin
-          G_mode_new = G_mode_reg + 1'b1;
-          G_mode_we  = 1;
-        end
-    end // G_mode
 
 
   //----------------------------------------------------------------
@@ -580,9 +548,9 @@ module blake2s_core(
   always @*
     begin : t_ctr
       t0_new = 32'h0;
-      t0_we  = 1'h1;
+      t0_we  = 1'h0;
       t1_new = 32'h0;
-      t1_we  = 1'h1;
+      t1_we  = 1'h0;
 
       if (t_ctr_rst) begin
         t0_new = 32'h0;
@@ -593,18 +561,16 @@ module blake2s_core(
 
       if (t_ctr_inc) begin
         t0_we = 1'h1;
-        t1_we = 1'h1;
 
-        if (fix_final_block) begin
+        if (last_new) begin
           t0_new = t0_reg + blocklen;
         end else begin
           t0_new = t0_reg + BLOCK_BYTES;
         end
 
         if (t0_new < t0_reg) begin
-            t1_new = t1_reg + 1'h1;
-        end else begin
           t1_new = t1_reg + 1'h1;
+          t1_we  = 1'h1;
         end
       end
     end // t_ctr
@@ -643,15 +609,12 @@ module blake2s_core(
       update_state       = 1'h0;
       init_v             = 1'h0;
       update_v           = 1'h0;
-      fix_final_block    = 1'h0;
       load_m             = 1'h0;
-      G_mode_inc         = 1'h0;
-      G_mode_rst         = 1'h0;
+      G_mode             = G_ROW;
       round_ctr_inc      = 1'h0;
       round_ctr_rst      = 1'h0;
       t_ctr_inc          = 1'h0;
       t_ctr_rst          = 1'h0;
-      update_chain_value = 1'h0;
       last_new           = 1'h0;
       last_we            = 1'h0;
       ready_new          = 1'h0;
@@ -663,7 +626,10 @@ module blake2s_core(
       case (blake2s_ctrl_reg)
         CTRL_IDLE: begin
           if (init) begin
+            last_new         = 1'h0;
+            last_we          = 1'h1;
             init_state       = 1'h1;
+            t_ctr_rst        = 1'h1;
             ready_new        = 1'h0;
             ready_we         = 1'h1;
             blake2s_ctrl_new = CTRL_FINISH;
@@ -672,33 +638,38 @@ module blake2s_core(
 
           if (update) begin
             if (blocklen == BLOCK_BYTES) begin
-              init_v           = 1'h1;
               load_m           = 1'h1;
-              G_mode_rst       = 1'h1;
-              round_ctr_rst    = 1'h1;
+              t_ctr_inc        = 1'h1;
               ready_new        = 1'h0;
               ready_we         = 1'h1;
-              blake2s_ctrl_new = CTRL_G_ROW;
+              blake2s_ctrl_new = CTRL_INIT_ROUND;
               blake2s_ctrl_we  = 1'h1;
             end
           end
 
           if (finish) begin
+            load_m           = 1'h1;
+            t_ctr_inc        = 1'h1;
             last_new         = 1'h1;
             last_we          = 1'h1;
-            init_v           = 1'h1;
-            load_m           = 1'h1;
-            G_mode_rst       = 1'h1;
-            round_ctr_rst    = 1'h1;
             ready_new        = 1'h0;
             ready_we         = 1'h1;
-            blake2s_ctrl_new = CTRL_G_ROW;
+            blake2s_ctrl_new = CTRL_INIT_ROUND;
             blake2s_ctrl_we  = 1'h1;
           end
         end
 
 
+        CTRL_INIT_ROUND: begin
+          init_v           = 1'h1;
+          round_ctr_rst    = 1'h1;
+          blake2s_ctrl_new = CTRL_G_ROW;
+          blake2s_ctrl_we  = 1'h1;
+        end
+
+
         CTRL_G_ROW: begin
+          G_mode           = G_ROW;
           update_v         = 1'h1;
           blake2s_ctrl_new = CTRL_G_DIAGONAL;
           blake2s_ctrl_we  = 1'h1;
@@ -706,6 +677,7 @@ module blake2s_core(
 
 
         CTRL_G_DIAGONAL: begin
+          G_mode           = G_DIAGONAL;
           update_v         = 1'h1;
           round_ctr_inc    = 1'h1;
           if (round_ctr_reg == (NUM_ROUNDS - 1)) begin
@@ -720,19 +692,11 @@ module blake2s_core(
 
 
         CTRL_COMP_DONE: begin
-          if (last_reg) begin
-            // Generate digest. THIS CODE DOES NOT WORK.
-            last_new           = 1'h0;
-            last_we            = 1'h1;
-            blake2s_ctrl_new   = CTRL_FINISH;
-            blake2s_ctrl_we    = 1'h1;
-          end
-          else begin
-            update_chain_value = 1'h1;
-            update_state       = 1'h1;
-            blake2s_ctrl_new   = CTRL_FINISH;
-            blake2s_ctrl_we    = 1'h1;
-          end
+          last_new           = 1'h0;
+          last_we            = 1'h1;
+          update_state       = 1'h1;
+          blake2s_ctrl_new   = CTRL_FINISH;
+          blake2s_ctrl_we    = 1'h1;
         end
 
 

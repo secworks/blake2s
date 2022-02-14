@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include "blake2s.h"
 
-#define SHOW_V 0
+#define SHOW_V 1
 #define SHOW_M_WORDS 1
 
 
@@ -95,7 +95,7 @@ void G(uint32_t *v, uint32_t a, uint32_t b, uint32_t c, uint32_t d, uint32_t x, 
   print_v(&v[0]);
   }
 
-  printf("G compledted.\n\n");
+  printf("G completed.\n\n");
 }
 
 
@@ -130,6 +130,7 @@ static void blake2s_compress(blake2s_ctx *ctx, int last)
 
     // low 32 bits of offset
     // high 32 bits
+    printf("t[0]: 0x%08x, t[1]: 0x%08x\n", ctx->t[0], ctx->t[1]);
     v[12] ^= ctx->t[0];
     v[13] ^= ctx->t[1];
 
@@ -150,14 +151,20 @@ static void blake2s_compress(blake2s_ctx *ctx, int last)
     for (i = 0; i < 10; i++) {
       printf("Round %02d:\n", (i + 1));
 
+      printf("Row processing started.\n");
       G(&v[0], 0, 4,  8, 12, m[sigma[i][ 0]], m[sigma[i][ 1]]);
       G(&v[0], 1, 5,  9, 13, m[sigma[i][ 2]], m[sigma[i][ 3]]);
       G(&v[0], 2, 6, 10, 14, m[sigma[i][ 4]], m[sigma[i][ 5]]);
       G(&v[0], 3, 7, 11, 15, m[sigma[i][ 6]], m[sigma[i][ 7]]);
+      printf("Row processing completed.\n");
+
+      printf("Diagonal processing started.\n");
       G(&v[0], 0, 5, 10, 15, m[sigma[i][ 8]], m[sigma[i][ 9]]);
       G(&v[0], 1, 6, 11, 12, m[sigma[i][10]], m[sigma[i][11]]);
       G(&v[0], 2, 7,  8, 13, m[sigma[i][12]], m[sigma[i][13]]);
       G(&v[0], 3, 4,  9, 14, m[sigma[i][14]], m[sigma[i][15]]);
+      printf("Diagonal processing completed.\n");
+      printf("\n");
     }
 
     printf("v after G processing:\n");

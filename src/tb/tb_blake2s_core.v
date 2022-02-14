@@ -125,10 +125,12 @@ module tb_blake2s_core();
       $display("-------------------------------------------------------------------------------------");
       $display("DUT internal state at cycle: %08d", cycle_ctr);
       $display("-------------------------------------");
-      $display("init:    0x%01x, update: 0x%01x, finish: 0x%01x", dut.init, dut.update, dut.finish);
-      $display("block M: 0x%064x", dut.block[511 : 256]);
-      $display("block L: 0x%064x", dut.block[255 : 000]);
-      $display("ready:   0x%01x", dut.ready);
+      $display("init:     0x%01x, update: 0x%01x, finish: 0x%01x", dut.init, dut.update, dut.finish);
+      $display("block M:  0x%064x", dut.block[511 : 256]);
+      $display("block L:  0x%064x", dut.block[255 : 000]);
+      $display("blocklen: 0x%02x", dut.blocklen);
+      $display("digest:   0x%064x", dut.digest);
+      $display("ready:    0x%01x", dut.ready);
       $display("");
       $display("blake2s_ctrl_reg: 0x%02x, blake2s_ctrl_new: 0x%02x, blake2s_ctrl_we: 0x%01x",
                dut.blake2s_ctrl_reg, dut.blake2s_ctrl_new, dut.blake2s_ctrl_we);
@@ -153,6 +155,8 @@ module tb_blake2s_core();
       $display("t0_reg: 0x%08x, t0_new: 0x%08x", dut.t0_reg, dut.t0_new);
       $display("t1_reg: 0x%08x, t1_new: 0x%08x", dut.t1_reg, dut.t1_new);
       $display("t_ctr_rst: 0x%1x, t_ctr_inc: 0x%1x", dut.t_ctr_rst, dut.t_ctr_inc);
+      $display("last_reg: 0x%1x, last_new: 0x%1x, last_we: 0x%1x",
+               dut.last_reg, dut.last_new, dut.last_we);
       $display("");
 
       $display("v0_new:  0x%08x, v1_new:  0x%08x, v2_new:  0x%08x, v3_new:  0x%08x",
@@ -165,7 +169,7 @@ module tb_blake2s_core();
                dut.v_new[12], dut.v_new[13], dut.v_new[14], dut.v_new[15]);
       $display("");
 
-      $display("G_mode_reg: 0x%1x, ", dut.G_mode_reg);
+      $display("G_mode: 0x%1x, ", dut.G_mode);
       $display("G0_m0: 0x%08x, G0_m1: 0x%08x, G1_m0: 0x%08x, G1_m1: 0x%08x",
                dut.G0_m0, dut.G0_m1, dut.G1_m0, dut.G1_m1);
       $display("G2_m0: 0x%08x, G2_m1: 0x%08x, G3_m0: 0x%08x, G3_m1: 0x%08x",
@@ -294,11 +298,11 @@ module tb_blake2s_core();
       tc_ctr = tc_ctr + 1;
 
       $display("");
-      $display("--- test_one_block_one_byte_message started.\n");
+      $display("--- test_one_block_one_byte_message: Started.\n");
 
       display_dut_state = 1;
       #(CLK_PERIOD);
-      $display("--- test_one_block_one_byte_message: asserting init.\n");
+      $display("--- test_one_block_one_byte_message: Asserting init.");
       tb_init = 1'h1;
       #(CLK_PERIOD);
       tb_init = 1'h0;
@@ -306,11 +310,11 @@ module tb_blake2s_core();
       while (!tb_ready) begin
         #(CLK_PERIOD);
       end
-      $display("--- test_one_block_one_byte_message: init completed.\n");
+      $display("--- test_one_block_one_byte_message: Init completed.");
 
       tb_block = 512'h00010203_04050607_08090a0b_0c0d0e0f_10111213_14151617_18191a1b_1c1d1e1f_20212223_24252627_28292a2b_2c2d2e2f_30313233_34353637_38393a3b_3c3d3e3f;
       tb_blocklen = 7'h40;
-      $display("--- test_one_block_one_byte_message: asserting update.\n");
+      $display("--- test_one_block_one_byte_message: Asserting update.");
       tb_update = 1'h1;
       #(CLK_PERIOD);
       tb_update = 1'h0;
@@ -318,12 +322,33 @@ module tb_blake2s_core();
       while (!tb_ready) begin
         #(CLK_PERIOD);
       end
-      $display("--- test_one_block_one_byte_message: update completed.\n");
-      tb_blocklen = 7'h00;
+      $display("--- test_one_block_one_byte_message: Update completed.");
+      #(CLK_PERIOD);
 
-      #(4 * CLK_PERIOD);
 
-      $display("--- test_one_block_one_byte_message completed.\n");
+      tb_block = {8'h40, {63{8'h00}}};
+      tb_blocklen = 7'h01;
+      $display("--- test_one_block_one_byte_message: Asserting finish.");
+      tb_finish = 1'h1;
+      #(CLK_PERIOD);
+      tb_finish = 1'h0;
+      while (!tb_ready) begin
+        #(CLK_PERIOD);
+      end
+      $display("--- test_one_block_one_byte_message: Finish completed.");
+      #(CLK_PERIOD);
+
+      if (dut.digest == 256'h1b53ee94aaf34e4b159d48de352c7f0661d0a40edff95a0b1639b4090e974472) begin
+        $display("--- test_one_block_one_byte_message: Correct digest generated.");
+        $display("--- test_one_block_one_byte_message: Got: 0x%064x", dut.digest);
+
+      end else begin
+        $display("--- test_one_block_one_byte_message: ERROR incorrect digest generated.");
+        $display("--- test_one_block_one_byte_message: Expected: 0x1b53ee94aaf34e4b159d48de352c7f0661d0a40edff95a0b1639b4090e974472");
+        $display("--- test_one_block_one_byte_message: Got:      0x%064x", dut.digest);
+      end
+
+      $display("--- test_one_block_one_byte_message: Completed.\n");
       $display("");
       #(2 * CLK_PERIOD);
 
