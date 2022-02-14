@@ -202,10 +202,10 @@ void self_test() {
 int main(void) {
   printf("Blake2s reference model. Performing a set of tests..\n");
 
-  self_test();
-  test_zero_length();
-  test_abc_message();
-  test_one_block_message();
+//  self_test();
+//  test_zero_length();
+//  test_abc_message();
+//  test_one_block_message();
   test_one_block_one_byte_message();
 
   return 0;

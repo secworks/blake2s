@@ -109,12 +109,6 @@ module tb_blake2s_core();
     begin : dut_monitor
       cycle_ctr = cycle_ctr + 1;
 
-      if (display_cycle_ctr)
-        begin
-          $display("cycle = %016x:", cycle_ctr);
-          $display("");
-        end
-
       if (display_dut_state)
         dump_dut_state();
     end // dut_monitor
@@ -128,9 +122,9 @@ module tb_blake2s_core();
   task dump_dut_state;
     begin
       $display("-------------------------------------------------------------------------------------");
-      $display("");
-      $display("DUT internal state");
-      $display("------------------");
+      $display("-------------------------------------------------------------------------------------");
+      $display("DUT internal state at cycle: %08d", cycle_ctr);
+      $display("-------------------------------------");
       $display("init:    0x%01x, update: 0x%01x, finish: 0x%01x", dut.init, dut.update, dut.finish);
       $display("block M: 0x%064x", dut.block[511 : 256]);
       $display("block L: 0x%064x", dut.block[255 : 000]);
@@ -139,6 +133,7 @@ module tb_blake2s_core();
       $display("blake2s_ctrl_reg: 0x%02x, blake2s_ctrl_new: 0x%02x, blake2s_ctrl_we: 0x%01x",
                dut.blake2s_ctrl_reg, dut.blake2s_ctrl_new, dut.blake2s_ctrl_we);
       $display("");
+
       $display("h0: 0x%08x, h1: 0x%08x, h2: 0x%08x, h3: 0x%08x",
                dut.h_reg[0], dut.h_reg[1], dut.h_reg[2], dut.h_reg[3]);
       $display("h4: 0x%08x, h5: 0x%08x, h6: 0x%08x, h7: 0x%08x",
@@ -149,14 +144,39 @@ module tb_blake2s_core();
       $display("v4:  0x%08x, v5:  0x%08x, v6:  0x%08x, v7:  0x%08x",
                dut.v_reg[4], dut.v_reg[5], dut.v_reg[6], dut.v_reg[7]);
       $display("v8:  0x%08x, v9:  0x%08x, v10: 0x%08x, v11: 0x%08x",
-               dut.v_reg[8], dut.v_reg[8], dut.v_reg[10], dut.v_reg[11]);
+               dut.v_reg[8], dut.v_reg[9], dut.v_reg[10], dut.v_reg[11]);
       $display("v12: 0x%08x, v13: 0x%08x, v14: 0x%08x, v15: 0x%08x",
                dut.v_reg[12], dut.v_reg[13], dut.v_reg[14], dut.v_reg[15]);
+      $display("init_v: 0x%1x, update_v: 0x%1x, v_we: 0x%1x", dut.init_v, dut.update_v, dut.v_we);
       $display("");
+
       $display("t0_reg: 0x%08x, t0_new: 0x%08x", dut.t0_reg, dut.t0_new);
       $display("t1_reg: 0x%08x, t1_new: 0x%08x", dut.t1_reg, dut.t1_new);
+      $display("t_ctr_rst: 0x%1x, t_ctr_inc: 0x%1x", dut.t_ctr_rst, dut.t_ctr_inc);
       $display("");
+
+      $display("v0_new:  0x%08x, v1_new:  0x%08x, v2_new:  0x%08x, v3_new:  0x%08x",
+               dut.v_new[0], dut.v_new[1], dut.v_new[2], dut.v_new[3]);
+      $display("v4_new:  0x%08x, v5_new:  0x%08x, v6_new:  0x%08x, v7_new:  0x%08x",
+               dut.v_new[4], dut.v_new[5], dut.v_new[6], dut.v_new[7]);
+      $display("v8_new:  0x%08x, v9_new:  0x%08x, v10_new: 0x%08x, v11_new: 0x%08x",
+               dut.v_new[8], dut.v_new[9], dut.v_new[10], dut.v_new[11]);
+      $display("v12_new: 0x%08x, v13_new: 0x%08x, v14_new: 0x%08x, v15_new: 0x%08x",
+               dut.v_new[12], dut.v_new[13], dut.v_new[14], dut.v_new[15]);
+      $display("");
+
+      $display("G_mode_reg: 0x%1x, ", dut.G_mode_reg);
+      $display("G0_m0: 0x%08x, G0_m1: 0x%08x, G1_m0: 0x%08x, G1_m1: 0x%08x",
+               dut.G0_m0, dut.G0_m1, dut.G1_m0, dut.G1_m1);
+      $display("G2_m0: 0x%08x, G2_m1: 0x%08x, G3_m0: 0x%08x, G3_m1: 0x%08x",
+               dut.G2_m0, dut.G2_m1, dut.G3_m0, dut.G3_m1);
+      $display("round_ctr_reg: 0x%02x, round_ctr_new: 0x%02x", dut.round_ctr_reg, dut.round_ctr_reg);
+      $display("round_ctr_rst: 0x%1x, round_ctr_inc: 0x%1x, round_ctr_we: 0x%1x",
+               dut.round_ctr_rst, dut.round_ctr_inc, dut.round_ctr_we);
       $display("-------------------------------------------------------------------------------------");
+      $display("-------------------------------------------------------------------------------------");
+      $display("");
+      $display("");
     end
   endtask // dump_dut_state
 
@@ -184,7 +204,7 @@ module tb_blake2s_core();
   //----------------------------------------------------------------
   task pause_finish(input [31 : 0] num_cycles);
     begin
-      $display("Pausing for %04d cycles and then finishing hard.", num_cycles);
+      $display("--- Pausing for %04d cycles and then finishing hard.", num_cycles);
       #(num_cycles * CLK_PERIOD);
       $finish;
     end
@@ -211,14 +231,14 @@ module tb_blake2s_core();
   //----------------------------------------------------------------
   task display_test_result;
     begin
-      $display("*** %02d test cases executed ****", tc_ctr);
+      $display("--- %02d test cases executed ---", tc_ctr);
       if (error_ctr == 0)
         begin
-          $display("*** All %02d test cases completed successfully ****", tc_ctr);
+          $display("--- All %02d test cases completed successfully ---", tc_ctr);
         end
       else
         begin
-          $display("*** %02d test cases did not complete successfully. ***", error_ctr);
+          $display("--- %02d test cases did not complete successfully. ---", error_ctr);
         end
     end
   endtask // display_test_result
@@ -256,24 +276,59 @@ module tb_blake2s_core();
   //----------------------------------------------------------------
   task reset_dut;
     begin
-      $display("TB: Resetting dut.");
+      $display("--- TB: Resetting dut.");
       tb_reset_n = 1'h0;
       #(2 * CLK_PERIOD);
       tb_reset_n = 1'h1;
       #(2 * CLK_PERIOD);
-      $display("TB: Reset done.");
+      $display("--- TB: Reset done.");
     end
   endtask // reset_dut
 
 
   //----------------------------------------------------------------
-  // display_ctx
+  // test_one_block_one_byte_message
   //----------------------------------------------------------------
-  task display_ctx;
-    begin: display_ctx
+  task test_one_block_one_byte_message;
+    begin: test_one_block_one_byte_message
+      tc_ctr = tc_ctr + 1;
+
+      $display("");
+      $display("--- test_one_block_one_byte_message started.\n");
+
+      display_dut_state = 1;
+      #(CLK_PERIOD);
+      $display("--- test_one_block_one_byte_message: asserting init.\n");
+      tb_init = 1'h1;
+      #(CLK_PERIOD);
+      tb_init = 1'h0;
+
+      while (!tb_ready) begin
+        #(CLK_PERIOD);
+      end
+      $display("--- test_one_block_one_byte_message: init completed.\n");
+
+      tb_block = 512'h00010203_04050607_08090a0b_0c0d0e0f_10111213_14151617_18191a1b_1c1d1e1f_20212223_24252627_28292a2b_2c2d2e2f_30313233_34353637_38393a3b_3c3d3e3f;
+      tb_blocklen = 7'h40;
+      $display("--- test_one_block_one_byte_message: asserting update.\n");
+      tb_update = 1'h1;
+      #(CLK_PERIOD);
+      tb_update = 1'h0;
+
+      while (!tb_ready) begin
+        #(CLK_PERIOD);
+      end
+      $display("--- test_one_block_one_byte_message: update completed.\n");
+      tb_blocklen = 7'h00;
+
+      #(4 * CLK_PERIOD);
+
+      $display("--- test_one_block_one_byte_message completed.\n");
+      $display("");
+      #(2 * CLK_PERIOD);
 
     end
-  endtask // display_ctx
+  endtask // test_one_block_one_byte_message
 
 
   //----------------------------------------------------------------
@@ -285,17 +340,21 @@ module tb_blake2s_core();
       tc_ctr = tc_ctr + 1;
 
       $display("");
-      $display("*** test_rfc_7693 started.\n");
+      $display("--- test_rfc_7693 started.\n");
 
       display_dut_state = 1;
       $display("test_rfc_7693: asserting init.\n");
       tb_init = 1'h1;
       #(CLK_PERIOD);
       tb_init = 1'h0;
+
+      while (!tb_ready) begin
+        #(CLK_PERIOD);
+      end
+
       $display("test_rfc_7693: init should be completed.\n");
       $display("");
-
-      display_ctx();
+      #(2 * CLK_PERIOD);
 
 //      #(CLK_PERIOD);
 //      $display("test_rfc_7693: asserting update.\n");
@@ -329,7 +388,7 @@ module tb_blake2s_core();
 //        error_ctr = error_ctr + 1;
 //      end
 
-      $display("*** test_rfc_7693 completed.\n");
+      $display("--- test_rfc_7693 completed.\n");
       $display("");
     end
   endtask // test_rfc_7693
@@ -342,19 +401,20 @@ module tb_blake2s_core();
   //----------------------------------------------------------------
   initial
     begin : testrunner
-      $display("*** Testbench for Blake2s core function test started ***");
+      $display("--- Testbench for Blake2s core function test started ---");
       $display("--------------------------------------------------------");
       $display("");
 
       init_sim();
       reset_dut();
 
-      test_rfc_7693();
+//      test_rfc_7693();
+      test_one_block_one_byte_message();
 
       display_test_result();
 
-      $display("*** Blake2s core functions simulation completed ****");
-      $display("-----------------------------------------------------");
+      $display("--- Blake2s core functions simulation completed ---");
+      $display("---------------------------------------------------");
       $display("");
       $finish_and_return(error_ctr);
     end // testrunner

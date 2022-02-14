@@ -335,7 +335,7 @@ module blake2s_core(
         end
 
         if (v_we) begin
-          for (i = 0; i < 8; i = i + 1) begin
+          for (i = 0; i < 16; i = i + 1) begin
             v_reg[i] <= v_new[i];
           end
         end
@@ -443,13 +443,13 @@ module blake2s_core(
       if (init_v)
         begin
           v_new[0]  = h_reg[0];
-          v_new[1]  = h_reg[0];
-          v_new[2]  = h_reg[0];
-          v_new[3]  = h_reg[0];
-          v_new[4]  = h_reg[0];
-          v_new[5]  = h_reg[0];
-          v_new[6]  = h_reg[0];
-          v_new[7]  = h_reg[0];
+          v_new[1]  = h_reg[1];
+          v_new[2]  = h_reg[2];
+          v_new[3]  = h_reg[3];
+          v_new[4]  = h_reg[4];
+          v_new[5]  = h_reg[5];
+          v_new[6]  = h_reg[6];
+          v_new[7]  = h_reg[7];
           v_new[8]  = IV0;
           v_new[9]  = IV1;
           v_new[10] = IV2;
@@ -666,7 +666,7 @@ module blake2s_core(
             init_state       = 1'h1;
             ready_new        = 1'h0;
             ready_we         = 1'h1;
-            blake2s_ctrl_new = CTRL_G_ROW;
+            blake2s_ctrl_new = CTRL_FINISH;
             blake2s_ctrl_we  = 1'h1;
           end
 
