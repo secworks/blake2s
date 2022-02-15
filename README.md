@@ -32,11 +32,11 @@ verification of the core.
 The core API follows the description in the Blake2s paper and the RFC,
 with separate calls to init(), update() and finish() the
 processing. (Note that finish() is called final() in the paper and the
-RFC, but finish() is a reserved word in Verilog).
+RFC, but final() is a reserved word in Verilog).
 
-One must always perform a init() operation before any update() or
-finish() operations. One must also always perform a finish() operation
-to get the final digest.
+One must always perform a init() operation separately, before any
+update() or finish() operations. One must also always perform a finish()
+operation to get the final digest.
 
 For messages smaller than a single 64 byte block, update() should not be
 called. Instead finish() should be called. It is the callers
@@ -49,34 +49,8 @@ operations as there are complete blocks and then a single final()
 operation.
 
 
-## Performance
-A single block is processed in 24, of these 20 cycles is for the 10
-rounds. The init() operation takes two cycles, and the finish()
-operation takes two additiona cycles besides 24 cycles for the final
-block processing.
 
-
-## Implementation details
-The core is a high speed, big, yet iterative implemenatation. It will
-perform 10 rounds in sequence. But the core contains four G_function
-instantiations and can perform a round in two cycles.
-
-For more compact implementations, the core can be restructured to use
-two or just a single, shared G_function.
-
-The G_function itself is purely combinational logic, with no registers
-and no sharing of operations. For higher clock frequency, and/or a more
-compact implementation the G_function can be rewored to be pipelined and
-to share for example the adders. Note that this will have a big impact
-on the number of cycles required to process a block. Also the core
-itself will have to be updated to handle G_function latency beyond the
-currently expected one cycle latency.
-
-
-Note that there is no separate ports for key and key length.
-
-
-## FuseSoC
+### FuseSoC
 This core is supported by the
 [FuseSoC](https://github.com/olofk/fusesoc) core package manager and
 build system. Some quick  FuseSoC instructions:
@@ -122,6 +96,40 @@ List all targets
 fusesoc core show secworks:crypto:blake2s
 ~~~
 
+
+## Performance
+A single block is processed in 24 cycles. Of these 20 cycles is for the 10
+rounds. The init() operation takes two cycles, and the finish()
+operation takes two additional cycles besides 24 cycles for the final
+block processing.
+
+
+## Implementation details
+The core is a high speed, big, yet iterative implemenatation. It will
+perform 10 rounds in sequence. But the core contains four G_function
+instantiations and can perform a round in two cycles.
+
+For more compact implementations, the core can be restructured to use
+two or just a single, shared G_function.
+
+The G_function itself is purely combinational logic, with no registers
+and no sharing of operations. For higher clock frequency, and/or a more
+compact implementation the G_function can be rewored to be pipelined and
+to share for example the adders. Note that this will have a big impact
+on the number of cycles required to process a block. Also the core
+itself will have to be updated to handle G_function latency beyond the
+currently expected one cycle latency.
+
+Note that there is no separate ports for key and key length.
+
+It is the callers responsibility to clear the unused bits in block
+containing less than 64 bytes. This holds for both the blake2s_core
+module and the blake2s top level wrapper. For the latter, this means
+writing one or more 32-bit all zero words.
+
+The core calculate message length based on the number of bytes given
+with each block. The core will also handle the last block as defined by
+the paper and the RFC.
 
 
 ## Implementation results
