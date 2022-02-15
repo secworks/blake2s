@@ -396,6 +396,41 @@ module tb_blake2s();
 
 
   //----------------------------------------------------------------
+  // test_name_version
+  //----------------------------------------------------------------
+  task test_name_version;
+    begin: test_name_version
+      reg [31 : 0] name0;
+      reg [31 : 0] name1;
+      reg [31 : 0] version;
+
+      $display("");
+      $display("--- test_name_version: Started.");
+
+      read_word(ADDR_NAME0);
+      name0 = read_data;
+
+      read_word(ADDR_NAME1);
+      name1 = read_data;
+
+      read_word(ADDR_VERSION);
+      version = read_data;
+
+      $display("--- test_name_version: Name: %c%c%c%c%c%c%c%c",
+               name0[31 : 24], name0[23 : 16], name0[15 : 8], name0[7 : 0],
+               name1[31 : 24], name1[23 : 16], name1[15 : 8], name1[7 : 0]);
+
+      $display("--- test_name_version: Version: %c%c%c%c",
+               version[31 : 24], version[23 : 16], version[15 : 8], version[7 : 0]);
+
+
+      $display("--- test_name_version: Completed.");
+      $display("");
+    end
+  endtask // test_name_version
+
+
+  //----------------------------------------------------------------
   // test_empty_message
   //----------------------------------------------------------------
   task test_empty_message;
@@ -655,6 +690,7 @@ module tb_blake2s();
       init_sim();
       reset_dut();
 
+      test_name_version();
       test_empty_message();
       test_rfc_7693();
       test_one_block_message();
