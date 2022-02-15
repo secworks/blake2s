@@ -450,9 +450,9 @@ module tb_blake2s();
     begin : test_rfc_7693
       tc_ctr = tc_ctr + 1;
 
-      tb_monitor         = 1;
-      display_dut_state  = 1;
-      display_core_state = 1;
+      tb_monitor         = 0;
+      display_dut_state  = 0;
+      display_core_state = 0;
 
       clean_block();
 
@@ -502,9 +502,9 @@ module tb_blake2s();
     begin : test_one_block_message
       tc_ctr = tc_ctr + 1;
 
-      tb_monitor         = 1;
-      display_dut_state  = 1;
-      display_core_state = 1;
+      tb_monitor         = 0;
+      display_dut_state  = 0;
+      display_core_state = 0;
 
       clean_block();
 
@@ -569,9 +569,9 @@ module tb_blake2s();
     begin : test_one_block_one_byte_message
       tc_ctr = tc_ctr + 1;
 
-      tb_monitor         = 1;
-      display_dut_state  = 1;
-      display_core_state = 1;
+      tb_monitor         = 0;
+      display_dut_state  = 0;
+      display_core_state = 0;
 
       clean_block();
 
