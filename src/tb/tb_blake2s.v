@@ -43,7 +43,7 @@ module tb_blake2s();
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  parameter DEBUG     = 1;
+  parameter DEBUG     = 0;
   parameter DUMP_WAIT = 0;
 
   parameter CLK_HALF_PERIOD = 1;
@@ -389,9 +389,9 @@ module tb_blake2s();
     begin : test_rfc_7693
       tc_ctr = tc_ctr + 1;
 
-      tb_monitor         = 1;
-      display_dut_state  = 1;
-      display_core_state = 1;
+      tb_monitor         = 0;
+      display_dut_state  = 0;
+      display_core_state = 0;
 
       $display("");
       $display("--- test_empty_message: Started.");
@@ -431,6 +431,56 @@ module tb_blake2s();
 
 
   //----------------------------------------------------------------
+  // test_rfc_7693
+  //----------------------------------------------------------------
+  task test_rfc_7693;
+    begin : test_rfc_7693
+      tc_ctr = tc_ctr + 1;
+
+      tb_monitor         = 1;
+      display_dut_state  = 1;
+      display_core_state = 1;
+
+      $display("");
+      $display("--- ttest_rfc_7693: Started.");
+
+      $display("--- test_rfc_7693: Asserting init.");
+      write_word(ADDR_CTRL, 32'h1);
+      wait_ready();
+      $display("--- test_rfc_7693: Init should be completed.");
+
+
+      $display("--- test_rfc_7693: Writing message and message length.");
+      write_word(ADDR_BLOCK0, 32'h61626300);
+      write_word(ADDR_BLOCKLEN, 32'h3);
+      $display("--- test_rfc_7693: Asserting finish.");
+      write_word(ADDR_CTRL, 32'h4);
+      wait_ready();
+
+      $display("--- test_rfc_7693: Finish should be completed.");
+      get_digest();
+
+      $display("--- test_rfc_7693: Checking generated digest.");
+      if (digest == 256'h508c5e8c327c14e2_e1a72ba34eeb452f_37458b209ed63a29_4d999b4c86675982) begin
+        $display("--- test_rfc_7693: Correct digest generated.");
+        $display("--- test_rfc_7693: Got: 0x%064x", digest);
+      end else begin
+        $display("--- test_rfc_7693: Error. Incorrect digest generated.");
+        $display("--- test_rfc_7693: Expected: 0x508c5e8c327c14e2_e1a72ba34eeb452f_37458b209ed63a29_4d999b4c86675982");
+        $display("--- test_rfc_7693: Got:      0x%064x", digest);
+        error_ctr = error_ctr + 1;
+      end
+
+      tb_monitor         = 0;
+      display_dut_state  = 0;
+      display_core_state = 0;
+
+      $display("--- test_rfc_7693: Completed.\n");
+    end
+  endtask // test_rfc_7693
+
+
+  //----------------------------------------------------------------
   // blake2s_test
   //----------------------------------------------------------------
   initial
@@ -443,7 +493,7 @@ module tb_blake2s();
       reset_dut();
 
       test_empty_message();
-
+      test_rfc_7693();
 
       display_test_result();
       $display("");
