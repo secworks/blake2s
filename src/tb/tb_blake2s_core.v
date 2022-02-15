@@ -291,6 +291,53 @@ module tb_blake2s_core();
 
 
   //----------------------------------------------------------------
+  // test_empty_message
+  //----------------------------------------------------------------
+  task test_empty_message;
+    begin : test_rfc_7693
+      tc_ctr = tc_ctr + 1;
+
+      $display("");
+      $display("--- test_empty_message: Started.");
+
+      $display("--- test_empty_message: Asserting init.");
+      tb_init = 1'h1;
+      #(CLK_PERIOD);
+      tb_init = 1'h0;
+
+      wait_ready();
+      $display("--- test_empty_message: Init should be completed.");
+
+
+      #(CLK_PERIOD);
+      $display("--- test_empty_message: Asserting finish.");
+      tb_blocklen = 7'h00;
+      tb_block = 512'h60;
+      tb_finish = 1'h1;
+      #(CLK_PERIOD);
+      tb_finish = 1'h0;
+      wait_ready();
+
+      $display("--- test_empty_message: Finish should be completed.");
+      #(CLK_PERIOD);
+
+      $display("--- test_empty_message: Checking generated digest.");
+      if (tb_digest == 256'h508c5e8c327c14e2_e1a72ba34eeb452f_37458b209ed63a29_4d999b4c86675982) begin
+        $display("--- test_empty_message: Correct digest generated.");
+        $display("--- test_empty_message: Got: 0x%064x", tb_digest);
+      end else begin
+        $display("--- test_empty_message: Error. Incorrect digest generated.");
+        $display("--- test_empty_message: Expected: 0x508c5e8c327c14e2e1a72ba34eeb452f37458b209ed63a294d999b4c86675982");
+        $display("--- test_empty_message: Got:      0x%064x", tb_digest);
+        error_ctr = error_ctr + 1;
+      end
+
+      $display("--- test_empty_message: Completed.\n");
+    end
+  endtask // test_empty_message
+
+
+  //----------------------------------------------------------------
   // test_one_block_message
   //----------------------------------------------------------------
   task test_one_block_message;
@@ -459,9 +506,10 @@ module tb_blake2s_core();
       init_sim();
       reset_dut();
 
-      test_rfc_7693();
+      test_empty_message();
       test_one_block_message();
       test_one_block_one_byte_message();
+      test_rfc_7693();
 
       display_test_result();
 
