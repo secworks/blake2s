@@ -307,9 +307,7 @@ module tb_blake2s_core();
       #(CLK_PERIOD);
       tb_init = 1'h0;
 
-      while (!tb_ready) begin
-        #(CLK_PERIOD);
-      end
+      wait_ready();
       $display("--- test_one_block_one_byte_message: Init completed.");
 
       tb_block = 512'h00010203_04050607_08090a0b_0c0d0e0f_10111213_14151617_18191a1b_1c1d1e1f_20212223_24252627_28292a2b_2c2d2e2f_30313233_34353637_38393a3b_3c3d3e3f;
@@ -319,12 +317,9 @@ module tb_blake2s_core();
       #(CLK_PERIOD);
       tb_update = 1'h0;
 
-      while (!tb_ready) begin
-        #(CLK_PERIOD);
-      end
+      wait_ready();
       $display("--- test_one_block_one_byte_message: Update completed.");
       #(CLK_PERIOD);
-
 
       tb_block = {8'h40, {63{8'h00}}};
       tb_blocklen = 7'h01;
@@ -332,9 +327,7 @@ module tb_blake2s_core();
       tb_finish = 1'h1;
       #(CLK_PERIOD);
       tb_finish = 1'h0;
-      while (!tb_ready) begin
-        #(CLK_PERIOD);
-      end
+      wait_ready();
       $display("--- test_one_block_one_byte_message: Finish completed.");
       #(CLK_PERIOD);
 
@@ -365,55 +358,45 @@ module tb_blake2s_core();
       tc_ctr = tc_ctr + 1;
 
       $display("");
-      $display("--- test_rfc_7693 started.\n");
+      $display("--- test_rfc_7693: Started.\n");
 
       display_dut_state = 1;
-      $display("test_rfc_7693: asserting init.\n");
+      $display("--- test_rfc_7693: Asserting init.\n");
       tb_init = 1'h1;
       #(CLK_PERIOD);
       tb_init = 1'h0;
 
-      while (!tb_ready) begin
-        #(CLK_PERIOD);
+      wait_ready();
+      $display("--- test_rfc_7693: Init should be completed.\n");
+      $display("");
+
+
+      #(CLK_PERIOD);
+      $display("--- test_rfc_7693: Asserting finish.\n");
+      tb_blocklen = 7'h03;
+      tb_block = {32'h61626300, {15{32'h0}}};
+      tb_finish = 1'h1;
+      #(CLK_PERIOD);
+      tb_finish = 1'h0;
+      wait_ready();
+
+      $display("--- test_rfc_7693: Finish should be completed.\n");
+      $display("");
+      #(CLK_PERIOD);
+      display_dut_state = 0;
+
+      $display("--- test_rfc_7693: Checking generated digest.\n");
+      if (tb_digest == 256'h508c5e8c327c14e2_e1a72ba34eeb452f_37458b209ed63a29_4d999b4c86675982) begin
+        $display("--- test_rfc_7693: Correct digest generated.");
+        $display("--- test_rfc_7693: Expected: 0x508c5e8c327c14e2e1a72ba34eeb452f37458b209ed63a294d999b4c86675982");
+      end else begin
+        $display("--- test_rfc_7693: Error. Incorrect digest generated.");
+        $display("--- test_rfc_7693: Expected: 0x508c5e8c327c14e2e1a72ba34eeb452f37458b209ed63a294d999b4c86675982");
+        $display("--- test_rfc_7693: Got:      0x%064x", tb_digest);
+        error_ctr = error_ctr + 1;
       end
 
-      $display("test_rfc_7693: init should be completed.\n");
-      $display("");
-      #(2 * CLK_PERIOD);
-
-//      #(CLK_PERIOD);
-//      $display("test_rfc_7693: asserting update.\n");
-//      tb_block = {32'h00636261, {15{32'h0}}};
-//      tb_update = 1'h1;
-//      #(CLK_PERIOD);
-//      tb_update = 1'h0;
-//      wait_ready();
-//      $display("test_rfc_7693: update should be completed.\n");
-//      $display("");
-//
-//
-//      #(CLK_PERIOD);
-//      $display("test_rfc_7693: asserting finish.\n");
-//      tb_finish = 1'h1;
-//      #(CLK_PERIOD);
-//      tb_finish = 1'h1;
-//      wait_ready();
-//      $display("test_rfc_7693: finish should be completed.\n");
-//      $display("");
-//      #(CLK_PERIOD);
-//      display_dut_state = 0;
-//
-//      $display("test_rfc_7693: Checking generated digest.\n");
-//      if (tb_digest == 256'h508c5e8c327c14e2_e1a72ba34eeb452f_37458b209ed63a29_4d999b4c86675982)
-//        $display("test_rfc_7693: Correct digest generated.");
-//      else begin
-//        $display("test_rfc_7693: Error. Incorrect digest generated.");
-//        $display("test_rfc_7693: Expected: 0x508c5e8c327c14e2e1a72ba34eeb452f37458b209ed63a294d999b4c86675982");
-//        $display("test_rfc_7693: Got:      0x%064x", tb_digest);
-//        error_ctr = error_ctr + 1;
-//      end
-
-      $display("--- test_rfc_7693 completed.\n");
+      $display("--- test_rfc_7693: Completed.\n");
       $display("");
     end
   endtask // test_rfc_7693
@@ -433,7 +416,7 @@ module tb_blake2s_core();
       init_sim();
       reset_dut();
 
-//      test_rfc_7693();
+      test_rfc_7693();
       test_one_block_one_byte_message();
 
       display_test_result();
