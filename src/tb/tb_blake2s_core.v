@@ -312,7 +312,7 @@ module tb_blake2s_core();
       #(CLK_PERIOD);
       $display("--- test_empty_message: Asserting finish.");
       tb_blocklen = 7'h00;
-      tb_block = 512'h60;
+      tb_block = 512'h0;
       tb_finish = 1'h1;
       #(CLK_PERIOD);
       tb_finish = 1'h0;
@@ -322,12 +322,12 @@ module tb_blake2s_core();
       #(CLK_PERIOD);
 
       $display("--- test_empty_message: Checking generated digest.");
-      if (tb_digest == 256'h508c5e8c327c14e2_e1a72ba34eeb452f_37458b209ed63a29_4d999b4c86675982) begin
+      if (tb_digest == 256'h69217a3079908094e11121d042354a7c1f55b6482ca1a51e1b250dfd1ed0eef9) begin
         $display("--- test_empty_message: Correct digest generated.");
         $display("--- test_empty_message: Got: 0x%064x", tb_digest);
       end else begin
         $display("--- test_empty_message: Error. Incorrect digest generated.");
-        $display("--- test_empty_message: Expected: 0x508c5e8c327c14e2e1a72ba34eeb452f37458b209ed63a294d999b4c86675982");
+        $display("--- test_empty_message: Expected: 0x69217a3079908094e11121d042354a7c1f55b6482ca1a51e1b250dfd1ed0eef9");
         $display("--- test_empty_message: Got:      0x%064x", tb_digest);
         error_ctr = error_ctr + 1;
       end
