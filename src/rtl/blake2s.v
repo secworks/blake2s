@@ -74,7 +74,7 @@ module blake2s(
 
   localparam CORE_NAME0   = 32'h626c616b; // "blak"
   localparam CORE_NAME1   = 32'h65327320; // "e2s "
-  localparam CORE_VERSION = 32'h302e3230; // "0.20"
+  localparam CORE_VERSION = 32'h302e3830; // "0.80"
 
 
   //----------------------------------------------------------------
