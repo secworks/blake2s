@@ -64,19 +64,19 @@ all: gf.sim m.sim core.sim top.sim
 
 
 gf.sim:  $(TB_GF_SRC) $(GF_SRC)
-	$(CC) $(CC_FLAGS) -o  $@ $^
+	$(CC) $(CC_FLAGS) -o $@ $^
 
 
 m.sim:  $(TB_M_SELECT_SRC) $(M_SELECT_SRC)
-	$(CC) $(CC_FLAGS) -o  $@ $^
+	$(CC) $(CC_FLAGS) -o $@ $^
 
 
 core.sim:  $(TB_CORE_SRC) $(CORE_SRC)
 	$(CC) $(CC_FLAGS) -o $@ $^
 
 
-top.sim:  $(TOP_SRC)
-	$(CC) $(CC_FLAGS) -o  $@ $^
+top.sim:  $(TB_TOP_SRC) $(TOP_SRC)
+	$(CC) $(CC_FLAGS) -o $@ $^
 
 
 lint: $(TOP_SRC)
