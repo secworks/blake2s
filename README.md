@@ -101,7 +101,8 @@ fusesoc core show secworks:crypto:blake2s
 A single block is processed in 24 cycles. Of these 20 cycles is for the 10
 rounds. The init() operation takes two cycles, and the finish()
 operation takes two additional cycles besides 24 cycles for the final
-block processing.
+block processing. This means that for long messages, the core will take
+0.375 cycles/byte.
 
 
 ## Implementation details
@@ -131,8 +132,18 @@ The core calculate message length based on the number of bytes given
 with each block. The core will also handle the last block as defined by
 the paper and the RFC.
 
+The message block buffer in blake_m_select.v is not mapped into a
+specific memory macro, and may be implemented with registers by the
+synthesis tool. For an efficient implementation, one would probably want
+to to change the implementation to use technology specific memory
+blocks.
+
 
 ## Implementation results
-To Be Written.
-
 Any implementation results provided would be greatly appreciated.
+
+
+### Xilinx Artix 7 200T-1 ###
+- LUTs: 3387
+- Regs: 1893
+- Fmax: 61 MHz
