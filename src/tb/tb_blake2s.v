@@ -383,6 +383,19 @@ module tb_blake2s();
 
 
   //----------------------------------------------------------------
+  // clean_block()
+  //----------------------------------------------------------------
+  task clean_block;
+    begin: clean_block
+      integer i;
+      for (i = 0 ; i < 16 ; i = i + 1) begin
+        write_word(ADDR_BLOCK0 + i, 32'h0);
+      end
+    end
+  endtask // clean_block
+
+
+  //----------------------------------------------------------------
   // test_empty_message
   //----------------------------------------------------------------
   task test_empty_message;
@@ -441,6 +454,8 @@ module tb_blake2s();
       display_dut_state  = 1;
       display_core_state = 1;
 
+      clean_block();
+
       $display("");
       $display("--- ttest_rfc_7693: Started.");
 
@@ -481,6 +496,73 @@ module tb_blake2s();
 
 
   //----------------------------------------------------------------
+  // test_rfc_7693
+  //----------------------------------------------------------------
+  task test_one_block_message;
+    begin : test_one_block_message
+      tc_ctr = tc_ctr + 1;
+
+      tb_monitor         = 1;
+      display_dut_state  = 1;
+      display_core_state = 1;
+
+      clean_block();
+
+      $display("");
+      $display("--- test_one_block_message: Started.");
+
+      $display("--- test_one_block_message: Asserting init.");
+      write_word(ADDR_CTRL, 32'h1);
+      wait_ready();
+      $display("--- test_one_block_message: Init should be completed.");
+
+
+      $display("--- test_one_block_message: Writing message and message length.");
+      write_word(ADDR_BLOCK0 + 0,  32'h00010203);
+      write_word(ADDR_BLOCK0 + 1,  32'h04050607);
+      write_word(ADDR_BLOCK0 + 2,  32'h08090a0b);
+      write_word(ADDR_BLOCK0 + 3,  32'h0c0d0e0f);
+      write_word(ADDR_BLOCK0 + 4,  32'h10111213);
+      write_word(ADDR_BLOCK0 + 5,  32'h14151617);
+      write_word(ADDR_BLOCK0 + 6,  32'h18191a1b);
+      write_word(ADDR_BLOCK0 + 7,  32'h1c1d1e1f);
+      write_word(ADDR_BLOCK0 + 8,  32'h20212223);
+      write_word(ADDR_BLOCK0 + 9,  32'h24252627);
+      write_word(ADDR_BLOCK0 + 10, 32'h28292a2b);
+      write_word(ADDR_BLOCK0 + 11, 32'h2c2d2e2f);
+      write_word(ADDR_BLOCK0 + 12, 32'h30313233);
+      write_word(ADDR_BLOCK0 + 13, 32'h34353637);
+      write_word(ADDR_BLOCK0 + 14, 32'h38393a3b);
+      write_word(ADDR_BLOCK0 + 15, 32'h3c3d3e3f);
+      write_word(ADDR_BLOCKLEN, 32'h40);
+      $display("--- test_one_block_message: Asserting finish.");
+      write_word(ADDR_CTRL, 32'h4);
+      wait_ready();
+
+      $display("--- test_one_block_message: Finish should be completed.");
+      get_digest();
+
+      $display("--- test_one_block_message: Checking generated digest.");
+      if (digest == 256'h56f34e8b96557e90c1f24b52d0c89d51086acf1b00f634cf1dde9233b8eaaa3e) begin
+        $display("--- test_one_block_message: Correct digest generated.");
+        $display("--- test_one_block_message: Got: 0x%064x", digest);
+      end else begin
+        $display("--- test_one_block_message: Error. Incorrect digest generated.");
+        $display("--- test_one_block_message: Expected: 0x56f34e8b96557e90c1f24b52d0c89d51086acf1b00f634cf1dde9233b8eaaa3e");
+        $display("--- test_one_block_message: Got:      0x%064x", digest);
+        error_ctr = error_ctr + 1;
+      end
+
+      tb_monitor         = 0;
+      display_dut_state  = 0;
+      display_core_state = 0;
+
+      $display("--- test_one_block_message: Completed.\n");
+    end
+  endtask // test_one_block_message
+
+
+  //----------------------------------------------------------------
   // blake2s_test
   //----------------------------------------------------------------
   initial
@@ -494,6 +576,7 @@ module tb_blake2s();
 
       test_empty_message();
       test_rfc_7693();
+      test_one_block_message();
 
       display_test_result();
       $display("");
