@@ -65,11 +65,11 @@ module blake2s(
 
   localparam ADDR_BLOCKLEN    = 8'h0a;
 
-  localparam ADDR_BLOCK_W00   = 8'h10;
-  localparam ADDR_BLOCK_W15   = 8'h1f;
+  localparam ADDR_BLOCK0      = 8'h10;
+  localparam ADDR_BLOCK15     = 8'h1f;
 
-  localparam ADDR_DIGEST0     = 8'h20;
-  localparam ADDR_DIGEST7     = 8'h27;
+  localparam ADDR_DIGEST0     = 8'h40;
+  localparam ADDR_DIGEST7     = 8'h47;
 
 
   localparam CORE_NAME0   = 32'h626c616b; // "blak"
@@ -106,9 +106,9 @@ module blake2s(
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
-  assign core_block = {block_mem[00], block_mem[01], block_mem[02], block_mem[03],
-                       block_mem[04], block_mem[05], block_mem[06], block_mem[07],
-                       block_mem[08], block_mem[09], block_mem[10], block_mem[11],
+  assign core_block = {block_mem[0],  block_mem[1],  block_mem[2],  block_mem[3],
+                       block_mem[4],  block_mem[5],  block_mem[6],  block_mem[7],
+                       block_mem[8],  block_mem[9],  block_mem[10], block_mem[11],
                        block_mem[12], block_mem[13], block_mem[14], block_mem[15]};
 
   assign read_data = tmp_read_data;
@@ -156,11 +156,13 @@ module blake2s(
           update_reg <= update_new;
           finish_reg <= finish_new;
 
-          if (blocklen_we)
+          if (blocklen_we) begin
             blocklen_reg <= write_data[6 : 0];
+          end
 
-          if (block_mem_we)
+          if (block_mem_we) begin
             block_mem[address[3 : 0]] <= write_data;
+          end
         end
     end // reg_update
 
@@ -182,36 +184,42 @@ module blake2s(
         begin
           if (we)
             begin
-              if (address == ADDR_CTRL)
-                begin
-                  init_new   = write_data[CTRL_INIT_BIT];
-                  update_new = write_data[CTRL_UPDATE_BIT];
-                  finish_new = write_data[CTRL_FINISH_BIT];
-                end
+              if (address == ADDR_CTRL) begin
+                init_new   = write_data[CTRL_INIT_BIT];
+                update_new = write_data[CTRL_UPDATE_BIT];
+                finish_new = write_data[CTRL_FINISH_BIT];
+              end
 
-              if (address == ADDR_BLOCKLEN)
+              if (address == ADDR_BLOCKLEN) begin
                 blocklen_we = 1;
+              end
 
-              if ((address >= ADDR_BLOCK_W00) && (address <= ADDR_BLOCK_W15))
+              if ((address >= ADDR_BLOCK0) && (address <= ADDR_BLOCK15)) begin
                 block_mem_we = 1;
-            end // if (we)
+              end
+            end
 
           else
             begin
-              if (address == ADDR_NAME0)
+              if (address == ADDR_NAME0) begin
                 tmp_read_data = CORE_NAME0;
+              end
 
-              if (address == ADDR_NAME1)
+              if (address == ADDR_NAME1) begin
                 tmp_read_data = CORE_NAME1;
+              end
 
-              if (address == ADDR_VERSION)
-                  tmp_read_data = CORE_VERSION;
+              if (address == ADDR_VERSION) begin
+                tmp_read_data = CORE_VERSION;
+              end
 
-              if (address == ADDR_STATUS)
+              if (address == ADDR_STATUS) begin
                 tmp_read_data = {31'h0, core_ready};
+              end
 
-              if ((address >= ADDR_DIGEST0) && (address <= ADDR_DIGEST7))
-                tmp_read_data = core_digest[(3 - (address - ADDR_DIGEST0)) * 32 +: 32];
+              if ((address >= ADDR_DIGEST0) && (address <= ADDR_DIGEST7)) begin
+                tmp_read_data = core_digest[(7 - (address - ADDR_DIGEST0)) * 32 +: 32];
+              end
             end
         end
     end // api
