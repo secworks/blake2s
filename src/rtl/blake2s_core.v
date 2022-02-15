@@ -563,9 +563,9 @@ module blake2s_core(
         t0_we = 1'h1;
 
         if (last_new) begin
-          t0_new = t0_reg + blocklen;
+          t0_new = t0_reg + {25'h0, blocklen};
         end else begin
-          t0_new = t0_reg + BLOCK_BYTES;
+          t0_new = t0_reg + {25'h0, BLOCK_BYTES};
         end
 
         if (t0_new < t0_reg) begin
