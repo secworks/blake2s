@@ -8,16 +8,15 @@ filesets:
       - src/rtl/blake2s.v
       - src/rtl/blake2s_core.v
       - src/rtl/blake2s_m_select.v
-      - src/rtl/blake2s_round.v
       - src/rtl/blake2s_G.v
     file_type : verilogSource
 
   tb:
     files:
-      - src/tb/tb_blake2s_G.v
+      - src/tb/tb_blake2s.v
       - src/tb/tb_blake2s_core.v
       - src/tb/tb_blake2s_m_select.v
-      - src/tb/tb_blake2s_round.v
+      - src/tb/tb_blake2s_G.v
     file_type : verilogSource
 
   openlane: {files : [data/sky130.tcl : {file_type : tclSource}]}
@@ -43,11 +42,3 @@ targets:
     default_tool: icarus
     filesets: [rtl, tb]
     toplevel : tb_blake2s
-
-  tb_aes_key_mem:
-    <<: *tb
-    toplevel : tb_aes_key_mem
-
-  tb_blake2s_core:
-    <<: *tb
-    toplevel : tb_blake2s_core
