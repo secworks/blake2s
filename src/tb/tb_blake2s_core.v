@@ -235,14 +235,14 @@ module tb_blake2s_core();
   //----------------------------------------------------------------
   task display_test_result;
     begin
-      $display("--- %02d test cases executed ---", tc_ctr);
+      $display("--- %02d test cases executed                      ---", tc_ctr);
       if (error_ctr == 0)
         begin
-          $display("--- All %02d test cases completed successfully ---", tc_ctr);
+          $display("--- All %02d test cases completed successfully    ---", tc_ctr);
         end
       else
         begin
-          $display("--- %02d test cases did not complete successfully. ---", error_ctr);
+          $display("--- %02d test cases did not complete successfully ---", error_ctr);
         end
     end
   endtask // display_test_result
@@ -291,6 +291,53 @@ module tb_blake2s_core();
 
 
   //----------------------------------------------------------------
+  // test_one_block_message
+  //----------------------------------------------------------------
+  task test_one_block_message;
+    begin: test_one_block_message
+      tc_ctr = tc_ctr + 1;
+
+      $display("");
+      $display("--- test_one_block_message: Started.");
+
+      #(CLK_PERIOD);
+      $display("--- test_one_block_message: Asserting init.");
+      tb_init = 1'h1;
+      #(CLK_PERIOD);
+      tb_init = 1'h0;
+
+      wait_ready();
+      $display("--- test_one_block_message: Init completed.");
+
+      tb_block = 512'h00010203_04050607_08090a0b_0c0d0e0f_10111213_14151617_18191a1b_1c1d1e1f_20212223_24252627_28292a2b_2c2d2e2f_30313233_34353637_38393a3b_3c3d3e3f;
+      tb_blocklen = 7'h40;
+      $display("--- test_one_block_message: Asserting finish.");
+      tb_finish = 1'h1;
+      #(CLK_PERIOD);
+      tb_finish = 1'h0;
+      wait_ready();
+      $display("--- test_one_block_message: Finish completed.");
+      #(CLK_PERIOD);
+
+      if (dut.digest == 256'h56f34e8b96557e90c1f24b52d0c89d51086acf1b00f634cf1dde9233b8eaaa3e) begin
+        $display("--- test_one_block_message: Correct digest generated.");
+        $display("--- test_one_block_message: Got: 0x%064x", dut.digest);
+
+      end else begin
+        $display("--- test_one_block_message: ERROR incorrect digest generated.");
+        $display("--- test_one_block_message: Expected: 0x56f34e8b96557e90c1f24b52d0c89d51086acf1b00f634cf1dde9233b8eaaa3e");
+        $display("--- test_one_block_message: Got:      0x%064x", dut.digest);
+        error_ctr = error_ctr + 1;
+      end
+
+      $display("--- test_one_block_message: Completed.\n");
+      #(2 * CLK_PERIOD);
+
+    end
+  endtask // test_one_block_message
+
+
+  //----------------------------------------------------------------
   // test_one_block_one_byte_message
   //----------------------------------------------------------------
   task test_one_block_one_byte_message;
@@ -298,9 +345,8 @@ module tb_blake2s_core();
       tc_ctr = tc_ctr + 1;
 
       $display("");
-      $display("--- test_one_block_one_byte_message: Started.\n");
+      $display("--- test_one_block_one_byte_message: Started.");
 
-      display_dut_state = 1;
       #(CLK_PERIOD);
       $display("--- test_one_block_one_byte_message: Asserting init.");
       tb_init = 1'h1;
@@ -339,10 +385,10 @@ module tb_blake2s_core();
         $display("--- test_one_block_one_byte_message: ERROR incorrect digest generated.");
         $display("--- test_one_block_one_byte_message: Expected: 0x1b53ee94aaf34e4b159d48de352c7f0661d0a40edff95a0b1639b4090e974472");
         $display("--- test_one_block_one_byte_message: Got:      0x%064x", dut.digest);
+        error_ctr = error_ctr + 1;
       end
 
       $display("--- test_one_block_one_byte_message: Completed.\n");
-      $display("");
       #(2 * CLK_PERIOD);
 
     end
@@ -358,21 +404,19 @@ module tb_blake2s_core();
       tc_ctr = tc_ctr + 1;
 
       $display("");
-      $display("--- test_rfc_7693: Started.\n");
+      $display("--- test_rfc_7693: Started.");
 
-      display_dut_state = 1;
-      $display("--- test_rfc_7693: Asserting init.\n");
+      $display("--- test_rfc_7693: Asserting init.");
       tb_init = 1'h1;
       #(CLK_PERIOD);
       tb_init = 1'h0;
 
       wait_ready();
-      $display("--- test_rfc_7693: Init should be completed.\n");
-      $display("");
+      $display("--- test_rfc_7693: Init should be completed.");
 
 
       #(CLK_PERIOD);
-      $display("--- test_rfc_7693: Asserting finish.\n");
+      $display("--- test_rfc_7693: Asserting finish.");
       tb_blocklen = 7'h03;
       tb_block = {32'h61626300, {15{32'h0}}};
       tb_finish = 1'h1;
@@ -380,15 +424,13 @@ module tb_blake2s_core();
       tb_finish = 1'h0;
       wait_ready();
 
-      $display("--- test_rfc_7693: Finish should be completed.\n");
-      $display("");
+      $display("--- test_rfc_7693: Finish should be completed.");
       #(CLK_PERIOD);
-      display_dut_state = 0;
 
-      $display("--- test_rfc_7693: Checking generated digest.\n");
+      $display("--- test_rfc_7693: Checking generated digest.");
       if (tb_digest == 256'h508c5e8c327c14e2_e1a72ba34eeb452f_37458b209ed63a29_4d999b4c86675982) begin
         $display("--- test_rfc_7693: Correct digest generated.");
-        $display("--- test_rfc_7693: Expected: 0x508c5e8c327c14e2e1a72ba34eeb452f37458b209ed63a294d999b4c86675982");
+        $display("--- test_rfc_7693: Got: 0x%064x", tb_digest);
       end else begin
         $display("--- test_rfc_7693: Error. Incorrect digest generated.");
         $display("--- test_rfc_7693: Expected: 0x508c5e8c327c14e2e1a72ba34eeb452f37458b209ed63a294d999b4c86675982");
@@ -397,7 +439,6 @@ module tb_blake2s_core();
       end
 
       $display("--- test_rfc_7693: Completed.\n");
-      $display("");
     end
   endtask // test_rfc_7693
 
@@ -409,20 +450,25 @@ module tb_blake2s_core();
   //----------------------------------------------------------------
   initial
     begin : testrunner
-      $display("--- Testbench for Blake2s core function test started ---");
-      $display("--------------------------------------------------------");
+      $display("");
+      $display("-------------------------------------------");
+      $display("--- Testbench for Blake2s core  started ---");
+      $display("-------------------------------------------");
       $display("");
 
       init_sim();
       reset_dut();
 
       test_rfc_7693();
+      test_one_block_message();
       test_one_block_one_byte_message();
 
       display_test_result();
 
-      $display("--- Blake2s core functions simulation completed ---");
-      $display("---------------------------------------------------");
+      $display("");
+      $display("-------------------------------------------");
+      $display("--- testbench for Blake2s core completed ---");
+      $display("--------------------------------------------");
       $display("");
       $finish_and_return(error_ctr);
     end // testrunner
