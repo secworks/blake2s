@@ -9,8 +9,9 @@
 #include <stdio.h>
 #include "blake2s.h"
 
-#define SHOW_V 1
-#define SHOW_M_WORDS 1
+#define VERBOSE 0
+#define SHOW_V 0
+#define SHOW_M_WORDS 0
 
 
 // Cyclic right rotation.
@@ -70,7 +71,9 @@ void print_ctx(blake2s_ctx *ctx) {
 // Allows us to output intermediate values for debugging.
 //------------------------------------------------------------------
 void G(uint32_t *v, uint32_t a, uint32_t b, uint32_t c, uint32_t d, uint32_t x, uint32_t y) {
-  printf("G started.\n");
+  if (VERBOSE) {
+    printf("G started.\n");
+  }
 
   if (SHOW_V) {
     printf("v before processing:\n");
@@ -91,11 +94,13 @@ void G(uint32_t *v, uint32_t a, uint32_t b, uint32_t c, uint32_t d, uint32_t x, 
   v[b] = ROTR32(v[b] ^ v[c], 7);
 
   if (SHOW_V) {
-  printf("v after processing:\n");
-  print_v(&v[0]);
+    printf("v after processing:\n");
+    print_v(&v[0]);
   }
 
-  printf("G completed.\n\n");
+  if (VERBOSE) {
+    printf("G completed.\n\n");
+  }
 }
 
 
@@ -117,10 +122,12 @@ static void blake2s_compress(blake2s_ctx *ctx, int last)
         {10, 2, 8, 4, 7, 6, 1, 5, 15, 11, 9, 14, 3, 12, 13, 0}
     };
 
-    printf("blake2s_compress started.\n");
-
     int i;
     uint32_t v[16], m[16];
+
+    if (VERBOSE) {
+      printf("blake2s_compress started.\n");
+    }
 
     // init work variables
     for (i = 0; i < 8; i++) {
@@ -130,7 +137,9 @@ static void blake2s_compress(blake2s_ctx *ctx, int last)
 
     // low 32 bits of offset
     // high 32 bits
-    printf("t[0]: 0x%08x, t[1]: 0x%08x\n", ctx->t[0], ctx->t[1]);
+    if (VERBOSE) {
+      printf("t[0]: 0x%08x, t[1]: 0x%08x\n", ctx->t[0], ctx->t[1]);
+    }
     v[12] ^= ctx->t[0];
     v[13] ^= ctx->t[1];
 
@@ -144,38 +153,52 @@ static void blake2s_compress(blake2s_ctx *ctx, int last)
         m[i] = B2S_GET32(&ctx->b[4 * i]);
     }
 
-    printf("v before G processing:\n");
-    print_v(&v[0]);
+    if (VERBOSE) {
+      printf("v before G processing:\n");
+      print_v(&v[0]);
+    }
 
     // Ten rounds of the G function applied on rows, diagonal.
     for (i = 0; i < 10; i++) {
-      printf("Round %02d:\n", (i + 1));
+      if (VERBOSE) {
+        printf("Round %02d:\n", (i + 1));
+        printf("Row processing started.\n");
+      }
 
-      printf("Row processing started.\n");
       G(&v[0], 0, 4,  8, 12, m[sigma[i][ 0]], m[sigma[i][ 1]]);
       G(&v[0], 1, 5,  9, 13, m[sigma[i][ 2]], m[sigma[i][ 3]]);
       G(&v[0], 2, 6, 10, 14, m[sigma[i][ 4]], m[sigma[i][ 5]]);
       G(&v[0], 3, 7, 11, 15, m[sigma[i][ 6]], m[sigma[i][ 7]]);
-      printf("Row processing completed.\n");
 
-      printf("Diagonal processing started.\n");
+      if (VERBOSE) {
+        printf("Row processing completed.\n");
+        printf("Diagonal processing started.\n");
+      }
+
       G(&v[0], 0, 5, 10, 15, m[sigma[i][ 8]], m[sigma[i][ 9]]);
       G(&v[0], 1, 6, 11, 12, m[sigma[i][10]], m[sigma[i][11]]);
       G(&v[0], 2, 7,  8, 13, m[sigma[i][12]], m[sigma[i][13]]);
       G(&v[0], 3, 4,  9, 14, m[sigma[i][14]], m[sigma[i][15]]);
-      printf("Diagonal processing completed.\n");
-      printf("\n");
+
+      if (VERBOSE) {
+        printf("Diagonal processing completed.\n");
+        printf("\n");
+      }
     }
 
-    printf("v after G processing:\n");
-    print_v(&v[0]);
+    if (VERBOSE) {
+      printf("v after G processing:\n");
+      print_v(&v[0]);
+    }
 
     // Update the hash state.
     for (i = 0; i < 8; ++i) {
-        ctx->h[i] ^= v[i] ^ v[i + 8];
+      ctx->h[i] ^= v[i] ^ v[i + 8];
     }
 
-    printf("blake2s_compress completed.\n");
+    if (VERBOSE) {
+      printf("blake2s_compress completed.\n");
+    }
 }
 
 
@@ -189,9 +212,11 @@ int blake2s_init(blake2s_ctx *ctx, size_t outlen,
 {
     size_t i;
 
-    printf("blake2s_init started.\n");
-    printf("Context before blake2s_init processing:\n");
-    print_ctx(ctx);
+    if (VERBOSE) {
+      printf("blake2s_init started.\n");
+      printf("Context before blake2s_init processing:\n");
+      print_ctx(ctx);
+    }
 
     if (outlen == 0 || outlen > 32 || keylen > 32)
         return -1;                      // illegal parameters
@@ -212,9 +237,11 @@ int blake2s_init(blake2s_ctx *ctx, size_t outlen,
         ctx->c = 64;                    // at the end
     }
 
-    printf("Context after blake2s_init processing:\n");
-    print_ctx(ctx);
-    printf("blake2s_init completed.\n");
+    if (VERBOSE) {
+      printf("Context after blake2s_init processing:\n");
+      print_ctx(ctx);
+      printf("blake2s_init completed.\n");
+    }
 
     return 0;
 }
@@ -228,9 +255,11 @@ void blake2s_update(blake2s_ctx *ctx,
 {
     size_t i;
 
-    printf("blake2s_update started.\n");
-    printf("Context before blake2s_update processing:\n");
-    print_ctx(ctx);
+    if (VERBOSE) {
+      printf("blake2s_update started.\n");
+      printf("Context before blake2s_update processing:\n");
+      print_ctx(ctx);
+    }
 
     for (i = 0; i < inlen; i++) {
         if (ctx->c == 64) {             // buffer full ?
@@ -242,9 +271,12 @@ void blake2s_update(blake2s_ctx *ctx,
         }
         ctx->b[ctx->c++] = ((const uint8_t *) in)[i];
     }
-    printf("Context after blake2s_update processing:\n");
-    print_ctx(ctx);
-    printf("blake2s_update completed.\n");
+
+    if (VERBOSE) {
+      printf("Context after blake2s_update processing:\n");
+      print_ctx(ctx);
+      printf("blake2s_update completed.\n");
+    }
 }
 
 
@@ -256,9 +288,11 @@ void blake2s_final(blake2s_ctx *ctx, void *out)
 {
     size_t i;
 
-    printf("blake2s_final started.\n");
-    printf("Context before blake2s_final processing:\n");
-    print_ctx(ctx);
+   if (VERBOSE) {
+     printf("blake2s_final started.\n");
+     printf("Context before blake2s_final processing:\n");
+     print_ctx(ctx);
+   }
 
     ctx->t[0] += ctx->c;                // mark last block offset
 
@@ -281,9 +315,11 @@ void blake2s_final(blake2s_ctx *ctx, void *out)
             (ctx->h[i >> 2] >> (8 * (i & 3))) & 0xFF;
     }
 
-    printf("Context after blake2s_final processing:\n");
-    print_ctx(ctx);
-    printf("blake2s_final completed.\n");
+   if (VERBOSE) {
+     printf("Context after blake2s_final processing:\n");
+     print_ctx(ctx);
+     printf("blake2s_final completed.\n");
+   }
 }
 
 
