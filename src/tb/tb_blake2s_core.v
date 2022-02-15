@@ -463,9 +463,10 @@ module tb_blake2s_core();
 
 
       #(CLK_PERIOD);
-      $display("--- test_rfc_7693: Asserting finish.");
+      $display("--- test_rfc_7693: Setting message and message length.");
       tb_blocklen = 7'h03;
       tb_block = {32'h61626300, {15{32'h0}}};
+      $display("--- test_rfc_7693: Asserting finish.");
       tb_finish = 1'h1;
       #(CLK_PERIOD);
       tb_finish = 1'h0;
