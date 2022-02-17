@@ -3,7 +3,7 @@ Verilog implementation of the [Blake2s](https://blake2.net/) hash function.
 
 
 ## Implementation status
-Implenetation completed. Functionally corroct. Needs testing in
+Implemetation completed. Functionally correct. Needs testing in
 real hardware. *Use* *With* *Caution*.
 
 
