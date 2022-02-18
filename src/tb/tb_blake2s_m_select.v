@@ -2,7 +2,7 @@
 //
 // tb_blake2s_m_select.v
 // ---------------------
-// Testbench for the Blake2s M selection module.
+// Testbench for the BLAKE2s M selection module.
 //
 //
 // Author: Joachim Strömbergson
@@ -308,7 +308,7 @@ module tb_blake2s_m_select();
   //----------------------------------------------------------------
   initial
     begin : testrunner
-      $display("--- Testbench for Blake2 m select module started ---");
+      $display("--- Testbench for BLAKE2 m select module started ---");
       $display("----------------------------------------------------");
       $display("");
 
@@ -318,7 +318,7 @@ module tb_blake2s_m_select();
       test_case2();
 
       display_test_result();
-      $display("--- Testbench for Blake2 m select module completed ---");
+      $display("--- Testbench for BLAKE2 m select module completed ---");
       $display("------------------------------------------------------");
       $finish_and_return(error_ctr);
     end // testrunner

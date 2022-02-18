@@ -1,5 +1,5 @@
 # blake2s
-Verilog implementation of the [Blake2s](https://blake2.net/) hash function.
+Verilog implementation of the [BLAKE2s](https://blake2.net/) hash function.
 
 
 ## Implementation status
@@ -8,17 +8,17 @@ real hardware. *Use* *With* *Caution*.
 
 
 ## Introduction
-Blake2s is 32-bit,  embedded- and hardware-oriented version of the Blake2 hash
-function. See the [Blake2 paper](https://blake2.net/blake2.pdf) for more
+BLAKE2s is 32-bit,  embedded- and hardware-oriented version of the BLAKE2 hash
+function. See the [BLAKE2 paper](https://blake2.net/blake2.pdf) for more
 information. Additionally, [RFC
 7693](https://tools.ietf.org/html/rfc7693) contains a good description,
 a reference model and a test vecrtor.
 
-Blake2s operates on 32-bit words and produces digests of up to
-32 bytes. This version of Blake2s always generates a 32 byte (i.e. 256
+BLAKE2s operates on 32-bit words and produces digests of up to
+32 bytes. This version of BLAKE2s always generates a 32 byte (i.e. 256
 bit) digest.
 
-This repository contains a forked version of the Blake2s reference model
+This repository contains a forked version of the BLAKE2s reference model
 by  Markku-Juhani O. Saarinen that appears in RFC 7693. The original
 repository [can be found
 here](https://github.com/mjosaarinen/blake2_mjosref). The forked version
@@ -29,7 +29,7 @@ verification of the core.
 
 
 ## Operation
-The core API follows the description in the Blake2s paper and the RFC,
+The core API follows the description in the BLAKE2s paper and the RFC,
 with separate calls to init(), update() and finish() the
 processing. (Note that finish() is called final() in the paper and the
 RFC, but final() is a reserved word in Verilog).

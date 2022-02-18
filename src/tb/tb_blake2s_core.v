@@ -2,7 +2,7 @@
 //
 // tb_blake2s_core.v
 // ------------------
-// Testbench for the Blake2s core function.
+// Testbench for the BLAKE2s core function.
 //
 //
 // Author: Joachim Strömbergson
@@ -500,7 +500,7 @@ module tb_blake2s_core();
     begin : testrunner
       $display("");
       $display("-------------------------------------------");
-      $display("--- Testbench for Blake2s core  started ---");
+      $display("--- Testbench for BLAKE2s core  started ---");
       $display("-------------------------------------------");
       $display("");
 
@@ -516,7 +516,7 @@ module tb_blake2s_core();
 
       $display("");
       $display("-------------------------------------------");
-      $display("--- testbench for Blake2s core completed ---");
+      $display("--- testbench for BLAKE2s core completed ---");
       $display("--------------------------------------------");
       $display("");
       $finish_and_return(error_ctr);
