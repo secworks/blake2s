@@ -2,7 +2,7 @@
 //
 // tb_blake2s_G.v
 // --------------
-// Testbench for the Blake2s G function.
+// Testbench for the BLAKE2s G function.
 //
 //
 // Author: Joachim Strömbergson
@@ -251,14 +251,14 @@ module tb_blake2s_G();
   //----------------------------------------------------------------
   initial
     begin : testrunner
-      $display("*** Testbench for Blake2 G function test started ***");
+      $display("*** Testbench for BLAKE2 G function test started ***");
       $display("----------------------------------------------------");
       $display("");
 
       init_dut();
       test1();
       display_test_result();
-      $display("*** Blake2 G functions simulation done  ****");
+      $display("*** BLAKE2 G functions simulation done  ****");
       $finish_and_return(error_ctr);
     end // testrunner
 

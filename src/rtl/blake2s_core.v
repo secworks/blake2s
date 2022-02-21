@@ -55,7 +55,7 @@ module blake2s_core(
 
   //----------------------------------------------------------------
   // Parameter block.
-  // See Blake2 paper and RFC 7693 for definition.
+  // See BLAKE2 paper and RFC 7693 for definition.
   // Chapter 2.8 in https://blake2.net/blake2.pdf
   // Section 2.5 in https://tools.ietf.org/html/rfc7693
   //----------------------------------------------------------------

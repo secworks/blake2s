@@ -119,7 +119,7 @@ void test_one_block_one_byte_message() {
 //------------------------------------------------------------------
 int main(void) {
   printf("\n");
-  printf("Blake2s reference model started. Performing a set of tests..\n");
+  printf("BLAKE2s reference model started. Performing a set of tests..\n");
   printf("Performing a set of tests.\n");
 
   test_zero_length();
@@ -127,7 +127,7 @@ int main(void) {
   test_one_block_message();
   test_one_block_one_byte_message();
 
-  printf("Blake2s reference model completed.\n");
+  printf("BLAKE2s reference model completed.\n");
   printf("\n");
 
   return 0;

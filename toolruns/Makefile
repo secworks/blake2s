@@ -90,7 +90,7 @@ clean:
 
 
 help:
-	@echo "Build system for simulation of Blake2s core."
+	@echo "Build system for simulation of BLAKE2s core."
 	@echo ""
 	@echo "Supported targets:"
 	@echo "------------------"
