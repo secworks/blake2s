@@ -280,7 +280,6 @@ module blake2s_core(
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
-  // Note little to big endian conversion.
   assign digest = {h_reg[0][7 : 0], h_reg[0][15 : 8], h_reg[0][23 : 16], h_reg[0][31 : 24],
                    h_reg[1][7 : 0], h_reg[1][15 : 8], h_reg[1][23 : 16], h_reg[1][31 : 24],
                    h_reg[2][7 : 0], h_reg[2][15 : 8], h_reg[2][23 : 16], h_reg[2][31 : 24],
@@ -295,10 +294,6 @@ module blake2s_core(
 
   //----------------------------------------------------------------
   // reg_update
-  //
-  // Update functionality for all registers in the core.
-  // All registers are positive edge triggered with asynchronous
-  // active low reset. All registers have write enable.
   //----------------------------------------------------------------
   always @ (posedge clk)
     begin : reg_update
