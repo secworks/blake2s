@@ -3,7 +3,10 @@
 // blake2s.c
 // ---------
 //
-// A simple blake2s Reference Implementation.
+// A simple BLAKE2s reference implementation.
+//
+// See LICENSE for license terms.
+// See README.md in the repo root for info about source code origin.
 //======================================================================
 
 #include <stdio.h>

@@ -1,5 +1,12 @@
+//======================================================================
+//
 // blake2s.h
+// ---------
 // BLAKE2s Hashing Context and API Prototypes
+//
+// See LICENSE for license terms.
+// See README.md in the repo root for info about source code origin.
+//======================================================================
 
 #ifndef BLAKE2S_H
 #define BLAKE2S_H
@@ -36,4 +43,3 @@ int blake2s(void *out, size_t outlen,   // return buffer for digest
     const void *in, size_t inlen);      // data to be hashed
 
 #endif
-

@@ -19,10 +19,10 @@ BLAKE2s operates on 32-bit words and produces digests of up to
 bit) digest.
 
 This repository contains a forked version of the BLAKE2s reference model
-by  Markku-Juhani O. Saarinen that appears in RFC 7693. The original
-repository [can be found
+by  Markku-Juhani O. Saarinen that appears in [RFC 7693](https://www.rfc-editor.org/rfc/rfc7693.html).
+The original repository [can be found
 here](https://github.com/mjosaarinen/blake2_mjosref). The forked version
-contains additional test cases that checks corener caaes. The forked
+contains additional test cases that checks corner cases. The forked
 version has also been instrumented to display internal values during
 processing. The model has been used to drive the functional
 verification of the core.
