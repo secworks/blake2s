@@ -1,4 +1,4 @@
-[![build-openlane-sky130](https://github.com/secwporks/blake2s/actions/workflows/ci.yaml/badge.svg?branch=master&event=push)](https://github.com/secworks/blake2s/actions/workflows/ci.yaml)
+[![build-openlane-sky130](https://github.com/secwporks/blake2s/actions/workflows/ci.yml/badge.svg?branch=master&event=push)](https://github.com/secworks/blake2s/actions/workflows/ci.yml)
 
 # blake2s
 Verilog implementation of the [BLAKE2s](https://blake2.net/) hash function.
