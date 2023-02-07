@@ -1,3 +1,5 @@
+[![ci](https://github.com/secwporks/blake2s/actions/workflows/ci.yaml/badge.svg?branch=main&event=push)](https://github.com/secworks/blake2s/actions/workflows/ci.yaml)
+
 # blake2s
 Verilog implementation of the [BLAKE2s](https://blake2.net/) hash function.
 
