@@ -51,6 +51,13 @@ operations as there are complete blocks and then a single final()
 operation.
 
 
+### Contact information ##
+
+Assured provides customer support including customization, integration
+and system development related to the core. For more informantion,
+please contact [Assured Security
+Consultants](https://www.assured.se/contact).
+
 
 ### FuseSoC
 This core is supported by the
