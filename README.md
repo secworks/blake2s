@@ -30,6 +30,13 @@ processing. The model has been used to drive the functional
 verification of the core.
 
 
+### Contact information ##
+Assured provides customer support including customization, integration
+and system development related to the core. For more information,
+please contact [Assured Security
+Consultants](https://www.assured.se/contact).
+
+
 ## Operation
 The core API follows the description in the BLAKE2s paper and the RFC,
 with separate calls to init(), update() and finish() the
@@ -49,14 +56,6 @@ is 64 bytes for all blocks processed using the update() operation.)
 For messages spanning more than one block, perform as many update()
 operations as there are complete blocks and then a single final()
 operation.
-
-
-### Contact information ##
-
-Assured provides customer support including customization, integration
-and system development related to the core. For more informantion,
-please contact [Assured Security
-Consultants](https://www.assured.se/contact).
 
 
 ### FuseSoC
