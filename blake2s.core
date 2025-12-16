@@ -1,6 +1,8 @@
 CAPI=2:
 
-name : secworks:crypto:blake2s:0
+name: secworks:crypto:blake2s:1.0.0
+description: Verilog implementation of the BLAKE2s hash function
+license: BSD-2-Clause
 
 filesets:
   rtl:
